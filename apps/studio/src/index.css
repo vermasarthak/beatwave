@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: #06080c;
+  color: #f1f5f9;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Glassmorphism styling */
+.glass-panel {
+  background: rgba(18, 22, 32, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.pad-glass {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.02) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 1px 0 rgba(255, 255, 255, 0.15);
+  transition: transform 0.08s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.08s ease, border-color 0.08s ease;
+}
+
+.pad-hover {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border-color: rgba(56, 189, 248, 0.4);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.2), inset 0 0 10px rgba(56, 189, 248, 0.2);
+}
+
+.pad-armed {
+  border-color: rgba(245, 158, 11, 0.7);
+  box-shadow: 0 0 25px rgba(245, 158, 11, 0.4), inset 0 0 15px rgba(245, 158, 11, 0.3);
+}
+
+.pad-strike {
+  transform: translateZ(-25px) scale(0.96) !important;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(56, 189, 248, 0.3) 100%) !important;
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 35px #38bdf8, inset 0 0 20px #ffffff !important;
+}
+
+.perspective-launchpad {
+  perspective: 1000px;
+  transform-style: preserve-3d;
+}

@@ -1,0 +1,1 @@
+{"root":["./src/actions.ts","./src/calibration.ts","./src/capabilities.ts","./src/events.ts","./src/geometry.ts","./src/index.ts","./src/pad.ts","./src/protocol.test.ts","./src/session.ts","./src/telemetry.ts"],"version":"5.9.3"}

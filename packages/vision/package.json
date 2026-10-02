@@ -1,0 +1,19 @@
+{
+  "name": "@beatwave/vision",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -b",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@beatwave/protocol": "workspace:*",
+    "@mediapipe/tasks-vision": "^0.10.21"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}

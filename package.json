@@ -1,0 +1,26 @@
+{
+  "name": "beatwave-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Production-grade, open-source, local-first AI air launchpad",
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --filter studio dev",
+    "build": "pnpm -r --filter \"!studio\" build && pnpm --filter studio build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint . --ext .ts,.tsx",
+    "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
+    "benchmark": "tsx benchmarks/run-all.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.0",
+    "fast-check": "^3.23.2",
+    "happy-dom": "^20.14.5",
+    "prettier": "^3.5.1",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5"
+  }
+}

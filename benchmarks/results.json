@@ -1,0 +1,45 @@
+{
+  "benchmarkTimestamp": "2026-10-02T22:45:07.868Z",
+  "environment": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "nodeVersion": "v22.19.0"
+  },
+  "metrics": {
+    "oneEuroFilterMs": {
+      "mean": 0.0004,
+      "p50": 0.0002,
+      "p95": 0.0008,
+      "p99": 0.0015
+    },
+    "landmarkNormalizationMs": {
+      "mean": 0.0012,
+      "p50": 0.0008,
+      "p95": 0.0022,
+      "p99": 0.0036
+    },
+    "kinematicFeaturesMs": {
+      "mean": 0.0006,
+      "p50": 0.0005,
+      "p95": 0.0005,
+      "p99": 0.0007
+    },
+    "full16PadFSMProcessMs": {
+      "mean": 0.0028,
+      "p50": 0.0009,
+      "p95": 0.0062,
+      "p99": 0.0067
+    },
+    "audioQuantizerScheduleMs": {
+      "mean": 0.0002,
+      "p50": 0.0002,
+      "p95": 0.0002,
+      "p99": 0.0003
+    },
+    "endToEndSoftwareDecisionLatencyMs": {
+      "p50": 0.0024,
+      "p95": 0.0091,
+      "note": "Measured software pipeline from landmark receipt to audio buffer scheduling. Excludes camera hardware exposure & audio DAC buffer latency."
+    }
+  }
+}

@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.cache/
+.pytest_cache/
+__pycache__/
+*.pyc
+*.pt
+*.onnx
+*.onnx.data
+coverage/
+.DS_Store
+*.log

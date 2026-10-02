@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  typescript-verification:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 12
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --config.ignore-scripts=false
+
+      - name: Run Unit & Replay Tests
+        run: pnpm test
+
+      - name: Build All Packages & Web App
+        run: pnpm build
+
+      - name: Run Benchmarks
+        run: pnpm benchmark
+
+  python-verification:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install torch numpy scipy fastapi uvicorn pydantic python-multipart pytest httpx
+
+      - name: Run Audio Lab Tests
+        run: pytest services/audio-lab/test_audio_lab.py
+
+      - name: Run StrikeNet Evaluation
+        run: python ml/strikenet/evaluate.py
