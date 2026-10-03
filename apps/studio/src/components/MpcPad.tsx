@@ -28,8 +28,9 @@ export const MpcPadComponent: React.FC<MpcPadProps> = ({
   const padNumStr = (pad.padIndex + 1).toString().padStart(2, '0');
 
   // Dynamic spring / compression
-  const yTranslate = isStruck ? 3 : isArmed ? 1 : 0;
-  const scale = isStruck ? 0.97 : 1.0;
+  const depthCompression = Math.max(compression, isStruck ? 1.0 : isArmed ? 0.6 : 0);
+  const yTranslate = isStruck ? 4 : isArmed ? 2 : Math.round(depthCompression * 3);
+  const scale = isStruck ? 0.96 : isArmed ? 0.98 : isHovered ? 1.01 : 1.0;
 
   return (
     <div
@@ -46,14 +47,14 @@ export const MpcPadComponent: React.FC<MpcPadProps> = ({
         touchAction: 'manipulation',
         transform: `translateY(${yTranslate}px) scale(${scale})`,
         boxShadow: isStruck
-          ? `0 0 25px ${padColor}, inset 0 0 16px ${padColor}88, 0 1px 3px rgba(0,0,0,0.9)`
+          ? `0 0 30px ${padColor}, inset 0 0 20px ${padColor}bb, 0 1px 2px rgba(0,0,0,0.95)`
           : isArmed
-          ? `0 0 14px rgba(245, 158, 11, 0.5), inset 0 0 8px rgba(245, 158, 11, 0.3)`
+          ? `0 0 16px rgba(245, 158, 11, 0.6), inset 0 0 10px rgba(245, 158, 11, 0.4)`
           : isHovered
-          ? `0 0 10px rgba(255, 255, 255, 0.25)`
+          ? `0 0 12px rgba(255, 255, 255, 0.35)`
           : undefined
       }}
-      className={`relative rounded-xl p-2.5 flex flex-col justify-between cursor-pointer select-none transition-all duration-75 group mpc-rubber-pad ${
+      className={`relative rounded-xl p-2.5 flex flex-col justify-between cursor-pointer select-none transition-all duration-75 group mpc-rubber-pad overflow-hidden ${
         isStruck
           ? 'mpc-rubber-pad-strike'
           : isHovered
@@ -61,6 +62,13 @@ export const MpcPadComponent: React.FC<MpcPadProps> = ({
           : ''
       }`}
     >
+      {/* 2.5D Strike Impact Ring */}
+      {isStruck && (
+        <div
+          style={{ borderColor: padColor }}
+          className="absolute inset-0 rounded-xl border-2 pointer-events-none animate-ping opacity-80"
+        />
+      )}
       {/* Top row: MPC Pad Number & Keyboard Shortcut */}
       <div className="flex justify-between items-center text-[10px] font-mono leading-none">
         <span className="font-extrabold tracking-wider text-slate-400 group-hover:text-amber-400 transition-colors">

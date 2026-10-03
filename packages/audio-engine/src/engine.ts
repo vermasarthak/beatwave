@@ -112,6 +112,7 @@ export class AudioEngine {
             chokeGroup: action.chokeGroup,
             startOffsetSec: action.startOffsetSec,
             endOffsetSec: action.endOffsetSec,
+            detune: action.pitchSemitones !== undefined ? action.pitchSemitones * 100 : undefined,
             loop: false,
             scheduledAudioTimeSec: scheduledTime,
             padIndex: strike.padIndex

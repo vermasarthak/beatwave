@@ -126,3 +126,48 @@ describe('Kanye West Signature Kits', () => {
   });
 });
 
+describe('VoicePool & Detune', () => {
+  it('passes detune parameter to AudioBufferSourceNode', async () => {
+    const { VoicePool } = await import('./voice.js');
+    const mockSetValueAtTime = vi.fn();
+    const mockCtx = {
+      currentTime: 0,
+      createBufferSource: vi.fn(() => ({
+        buffer: null,
+        detune: { setValueAtTime: mockSetValueAtTime },
+        connect: vi.fn(),
+        start: vi.fn(),
+        stop: vi.fn()
+      })),
+      createGain: vi.fn(() => ({
+        gain: { setValueAtTime: vi.fn(), linearRampToValueAtTime: vi.fn() },
+        connect: vi.fn()
+      })),
+      createStereoPanner: vi.fn(() => ({
+        pan: { setValueAtTime: vi.fn() },
+        connect: vi.fn()
+      }))
+    } as unknown as AudioContext;
+
+    const pool = new VoicePool(mockCtx, 8);
+    const mockBuffer = {} as AudioBuffer;
+    const dest = {} as AudioNode;
+
+    pool.spawnVoice(
+      {
+        sampleId: 'test_sample',
+        gain: 0.8,
+        pan: 0,
+        velocity: 0.9,
+        detune: 300,
+        scheduledAudioTimeSec: 0.05,
+        padIndex: 0
+      },
+      mockBuffer,
+      dest
+    );
+
+    expect(mockSetValueAtTime).toHaveBeenCalledWith(300, 0.05);
+  });
+});
+

@@ -15,6 +15,14 @@ interface FloatingPadGridProps {
   onToggleSongBacking?: () => void;
   transportState?: 'playing' | 'stopped' | 'paused';
   onToggleTransport?: () => void;
+  activeBankId?: 'A' | 'B' | 'C' | 'D';
+  onSelectBank?: (bankId: 'A' | 'B' | 'C' | 'D') => void;
+  fullLevel?: boolean;
+  onToggleFullLevel?: () => void;
+  sixteenLevels?: boolean;
+  onToggleSixteenLevels?: () => void;
+  noteRepeat?: boolean;
+  onToggleNoteRepeat?: () => void;
 }
 
 const SHORTCUT_KEYS = [
@@ -36,10 +44,17 @@ export const FloatingPadGrid: React.FC<FloatingPadGridProps> = ({
   songBackingActive = false,
   onToggleSongBacking,
   transportState = 'stopped',
-  onToggleTransport
+  onToggleTransport,
+  activeBankId = 'A',
+  onSelectBank,
+  fullLevel = false,
+  onToggleFullLevel,
+  sixteenLevels = false,
+  onToggleSixteenLevels,
+  noteRepeat = false,
+  onToggleNoteRepeat
 }) => {
   const [lastHit, setLastHit] = useState<{ padIndex: number; label: string; time: number } | null>(null);
-  const [activeBankTab, setActiveBankTab] = useState<'A' | 'B' | 'C' | 'D'>('A');
   const gridRef = useRef<HTMLDivElement | null>(null);
 
   // Automatically measure exact screen coordinates of all 16 pads and sync with GestureRuntime
@@ -136,16 +151,20 @@ export const FloatingPadGrid: React.FC<FloatingPadGridProps> = ({
               </span>
               <span>TEMPO: {bpm.toFixed(1)} BPM</span>
               <span>TS: 4/4</span>
-              <span className="bg-emerald-950/60 px-1 rounded text-[9px] border border-emerald-500/40">BANK {activeBankTab}</span>
+              <span className="bg-emerald-950/60 px-1 rounded text-[9px] border border-emerald-500/40">BANK {activeBankId}</span>
             </div>
 
-            {/* LCD Row 2: Active Track / Vocal Stems info */}
+            {/* LCD Row 2: Active Track / Mode Info */}
             <div className="py-1 flex justify-between items-center">
-              <div className="text-xs sm:text-sm font-black tracking-wide truncate max-w-[260px] text-emerald-300">
-                KIT: {kitName.toUpperCase()} [{album.toUpperCase()}]
+              <div className="text-xs sm:text-sm font-black tracking-wide truncate max-w-[280px] text-emerald-300">
+                {sixteenLevels
+                  ? 'MODE: 16 LEVELS (CHROMATIC PITCH -8 TO +7)'
+                  : noteRepeat
+                  ? `[ROLL ACTIVE] ${kitName.toUpperCase()}`
+                  : `KIT: ${kitName.toUpperCase()} [${album.toUpperCase()}]`}
               </div>
               <div className="text-[10px] tracking-wider font-mono opacity-80 hidden sm:block">
-                16-BIT / 48.0 kHz
+                {fullLevel ? 'FULL-VEL: 127' : '16-BIT / 48kHz'}
               </div>
             </div>
 
@@ -164,16 +183,17 @@ export const FloatingPadGrid: React.FC<FloatingPadGridProps> = ({
 
         {/* 2. HARDWARE FUNCTION BUTTONS & BANK SELECTORS */}
         <div className="flex flex-wrap items-center justify-between gap-2 px-1 py-0.5 border-y border-stone-300/80 text-[10px] font-bold text-zinc-700">
-          {/* MPC Bank Selectors */}
+          {/* MPC Bank Selectors (A, B, C, D) */}
           <div className="flex items-center gap-1.5">
             <span className="text-[9px] font-extrabold text-zinc-500 uppercase tracking-wider mr-1">BANK</span>
             {(['A', 'B', 'C', 'D'] as const).map((b) => (
               <button
                 key={b}
-                onClick={() => setActiveBankTab(b)}
+                onClick={() => onSelectBank?.(b)}
+                title={`Switch to Bank ${b}`}
                 className={`px-2.5 py-1 rounded text-[10px] font-black transition-all ${
-                  activeBankTab === b
-                    ? 'bg-amber-400 text-black shadow-md border border-amber-500'
+                  activeBankId === b
+                    ? 'bg-amber-400 text-black shadow-md border border-amber-500 scale-105'
                     : 'mpc-btn text-zinc-700 hover:text-black'
                 }`}
               >
@@ -184,16 +204,61 @@ export const FloatingPadGrid: React.FC<FloatingPadGridProps> = ({
 
           {/* Iconic Hardware Toggles */}
           <div className="flex items-center gap-1.5">
-            <button className="mpc-btn px-2.5 py-1 rounded text-[10px] flex items-center gap-1.5 text-zinc-800">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-600 shadow-[0_0_5px_#ef4444]" />
+            {/* FULL LEVEL Toggle */}
+            <button
+              onClick={onToggleFullLevel}
+              title="Lock all pad velocities to maximum 127"
+              className={`px-2.5 py-1 rounded text-[10px] flex items-center gap-1.5 font-bold transition-all ${
+                fullLevel
+                  ? 'bg-red-700 text-white shadow-[0_0_10px_#ef4444] border border-red-500'
+                  : 'mpc-btn text-zinc-800'
+              }`}
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  fullLevel ? 'bg-red-400 shadow-[0_0_8px_#ef4444] animate-pulse' : 'bg-red-900'
+                }`}
+              />
               FULL LEVEL
             </button>
-            <button className="mpc-btn px-2 py-1 rounded text-[10px] text-zinc-700 hidden sm:inline-block">
+
+            {/* 16 LEVELS Chromatic Tuning Toggle */}
+            <button
+              onClick={onToggleSixteenLevels}
+              title="Map selected sample across all 16 pads chromatically (-8 to +7 semitones)"
+              className={`px-2.5 py-1 rounded text-[10px] font-black flex items-center gap-1.5 transition-all ${
+                sixteenLevels
+                  ? 'bg-indigo-600 text-white shadow-[0_0_12px_#6366f1] border border-indigo-400 scale-105'
+                  : 'mpc-btn text-zinc-700 hover:text-black'
+              }`}
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  sixteenLevels ? 'bg-white shadow-[0_0_6px_#fff]' : 'bg-zinc-400'
+                }`}
+              />
               16 LEVELS
             </button>
-            <button className="mpc-btn px-2 py-1 rounded text-[10px] text-zinc-700 hidden sm:inline-block">
+
+            {/* NOTE REPEAT / ROLL Toggle */}
+            <button
+              onClick={onToggleNoteRepeat}
+              title="Auto-repeat held pads at current quantize rate"
+              className={`px-2.5 py-1 rounded text-[10px] font-black flex items-center gap-1.5 transition-all ${
+                noteRepeat
+                  ? 'bg-amber-500 text-black shadow-[0_0_12px_#f59e0b] border border-amber-300'
+                  : 'mpc-btn text-zinc-700 hover:text-black'
+              }`}
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  noteRepeat ? 'bg-black shadow-[0_0_6px_#000]' : 'bg-zinc-400'
+                }`}
+              />
               NOTE REPEAT
             </button>
+
+            {/* SONG STEM LOOP Backing Track */}
             <button
               onClick={onToggleSongBacking}
               className={`px-3 py-1 rounded text-[10px] font-black flex items-center gap-1.5 transition-all ${

@@ -14,6 +14,9 @@ import {
   AudioEngine,
   ALL_KITS,
   FLASHING_LIGHTS_KIT,
+  CLASSIC_808_KIT,
+  HEARTBREAK_KIT,
+  ProceduralSampleMeta,
   KanyeKitDefinition
 } from '@beatwave/audio-engine';
 import { GestureRuntime } from '@beatwave/gesture-runtime';
@@ -27,26 +30,90 @@ import { LocalStorageManager } from '@beatwave/storage';
 import { Header } from './components/Header.js';
 import { FloatingPadGrid } from './components/FloatingPadGrid.js';
 import { HandCursor, HandCursorHandle } from './components/HandCursor.js';
+import { HandSkeletonOverlay, HandSkeletonHandle } from './components/HandSkeletonOverlay.js';
 import { WaveformBar } from './components/WaveformBar.js';
 import { DebugOverlay } from './components/DebugOverlay.js';
 import { CalibrationModal } from './components/CalibrationModal.js';
 import { AutoKitModal } from './components/AutoKitModal.js';
 import { SyntheticDemoPlayer } from './demo/SyntheticDemoPlayer.js';
 
+const CHROMATIC_COLORS = [
+  '#7c3aed', '#6366f1', '#3b82f6', '#0284c7',
+  '#06b6d4', '#10b981', '#84cc16', '#eab308',
+  '#f59e0b', '#f97316', '#ef4444', '#dc2626',
+  '#b91c1c', '#db2777', '#c026d3', '#9333ea'
+];
+
 function createBankFromKit(
   kitId: string,
   bankId: 'A' | 'B' | 'C' | 'D' = 'A',
-  customBounds?: Map<number, Rect2D>
+  customBounds?: Map<number, Rect2D>,
+  sixteenLevelsSample?: ProceduralSampleMeta | null
 ): PadBank {
-  const kit = ALL_KITS.find((k) => k.id === kitId) || FLASHING_LIGHTS_KIT;
+  const currentKit = ALL_KITS.find((k) => k.id === kitId) || FLASHING_LIGHTS_KIT;
+
+  if (sixteenLevelsSample) {
+    return {
+      id: bankId,
+      name: `${sixteenLevelsSample.name} (16 Levels)`,
+      pads: Array.from({ length: 16 }, (_, i) => {
+        const padCol = i % 4;
+        const padRow = Math.floor(i / 4);
+        const defaultBounds: Rect2D = {
+          minX: 0.28 + padCol * 0.11,
+          maxX: 0.28 + padCol * 0.11 + 0.09,
+          minY: 0.32 + padRow * 0.11,
+          maxY: 0.32 + padRow * 0.11 + 0.09
+        };
+        const bounds = customBounds?.get(i) || defaultBounds;
+        const semitones = i - 8;
+        const semitoneLabel = semitones === 0 ? 'ROOT [0]' : `${semitones > 0 ? '+' : ''}${semitones}st`;
+
+        return {
+          id: `pad_16lvl_${i}`,
+          padIndex: i,
+          label: semitoneLabel,
+          color: CHROMATIC_COLORS[i] || '#38bdf8',
+          bounds,
+          action: {
+            type: 'SampleTrigger',
+            sampleId: sixteenLevelsSample.id,
+            gain: sixteenLevelsSample.defaultGain,
+            pan: 0,
+            pitchSemitones: semitones,
+            chokeGroup: 1
+          },
+          chokeGroup: 1
+        };
+      })
+    };
+  }
+
+  // Multi-Bank Architecture
+  let sourceSamples: readonly ProceduralSampleMeta[];
+  let bankName: string;
+
+  if (bankId === 'A') {
+    sourceSamples = currentKit.samples;
+    bankName = `${currentKit.name} (Vocal Hooks)`;
+  } else if (bankId === 'B') {
+    sourceSamples = [...currentKit.samples.slice(8), ...currentKit.samples.slice(0, 8)];
+    bankName = `${currentKit.name} (Verse & Chops)`;
+  } else if (bankId === 'C') {
+    sourceSamples = CLASSIC_808_KIT.samples;
+    bankName = `808 Drums & Percussion`;
+  } else {
+    sourceSamples = HEARTBREAK_KIT.samples;
+    bankName = `Melodic Synths & Taiko`;
+  }
+
   return {
     id: bankId,
-    name: `${kit.name} (${bankId})`,
+    name: bankName,
     pads: Array.from({ length: 16 }, (_, i) => {
-      const sample = kit.samples[i] || kit.samples[0];
+      const sample = sourceSamples[i] || sourceSamples[0];
       const padCol = i % 4;
       const padRow = Math.floor(i / 4);
-      // Realistic centered MPC pad grid: x in [0.28, 0.72], y in [0.32, 0.76]
       const defaultBounds: Rect2D = {
         minX: 0.28 + padCol * 0.11,
         maxX: 0.28 + padCol * 0.11 + 0.09,
@@ -60,7 +127,7 @@ function createBankFromKit(
         id: `pad_${bankId}_${i}`,
         padIndex: i,
         label: sample.note || sample.name,
-        color: sample.color || kit.themeColor,
+        color: sample.color || currentKit.themeColor,
         bounds,
         action: {
           type: 'SampleTrigger',
@@ -102,6 +169,38 @@ export const App: React.FC = () => {
   const [transportState, setTransportState] = useState<'playing' | 'stopped' | 'paused'>('stopped');
   const [songBackingActive, setSongBackingActive] = useState<boolean>(false);
 
+  // MPC Hardware Controls state
+  const [activeBankId, setActiveBankId] = useState<'A' | 'B' | 'C' | 'D'>('A');
+  const [fullLevel, setFullLevel] = useState<boolean>(false);
+  const [sixteenLevels, setSixteenLevels] = useState<boolean>(false);
+  const [noteRepeat, setNoteRepeat] = useState<boolean>(false);
+  const [showSkeleton, setShowSkeleton] = useState<boolean>(true);
+
+  const fullLevelRef = useRef<boolean>(false);
+  const noteRepeatRef = useRef<boolean>(false);
+  const sixteenLevelsRef = useRef<boolean>(false);
+  const lastStruckSampleRef = useRef<ProceduralSampleMeta | null>(null);
+  const skeletonHandleRef = useRef<HandSkeletonHandle | null>(null);
+  const currentBankRef = useRef<PadBank>(activeBank);
+  const heldPadsRef = useRef<Set<number>>(new Set());
+  const repeatIntervalRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    fullLevelRef.current = fullLevel;
+  }, [fullLevel]);
+
+  useEffect(() => {
+    sixteenLevelsRef.current = sixteenLevels;
+  }, [sixteenLevels]);
+
+  useEffect(() => {
+    noteRepeatRef.current = noteRepeat;
+    if (!noteRepeat && repeatIntervalRef.current !== null) {
+      clearInterval(repeatIntervalRef.current);
+      repeatIntervalRef.current = null;
+    }
+  }, [noteRepeat]);
+
   // Pad visual states
   const [padStates, setPadStates] = useState<Map<number, { state: PadLifecycleState; compression: number; hoverProximity: number }>>(new Map());
   const measuredBoundsRef = useRef<Map<number, Rect2D>>(new Map());
@@ -131,6 +230,86 @@ export const App: React.FC = () => {
   const trackerRef = useRef<MediaPipeHandTracker | null>(null);
   const normalizerRef = useRef<LandmarkNormalizer>(new LandmarkNormalizer(true, true));
 
+  // Note Repeat roll loop
+  const startNoteRepeat = useCallback(() => {
+    if (repeatIntervalRef.current !== null) return;
+    const intervalMs = Math.max(50, Math.round((60000 / bpm) / 4)); // 1/16th note roll
+    repeatIntervalRef.current = window.setInterval(() => {
+      if (heldPadsRef.current.size === 0 || !noteRepeatRef.current) {
+        if (repeatIntervalRef.current !== null) {
+          clearInterval(repeatIntervalRef.current);
+          repeatIntervalRef.current = null;
+        }
+        return;
+      }
+      for (const padIdx of heldPadsRef.current) {
+        const vel = fullLevelRef.current ? 1.0 : 0.92;
+        runtime?.triggerPadManual(padIdx, vel, 'POINTER_FALLBACK');
+      }
+    }, intervalMs);
+  }, [bpm, runtime]);
+
+  const stopNoteRepeat = useCallback(() => {
+    if (repeatIntervalRef.current !== null) {
+      clearInterval(repeatIntervalRef.current);
+      repeatIntervalRef.current = null;
+    }
+  }, []);
+
+  const handleSelectBank = useCallback((bankId: 'A' | 'B' | 'C' | 'D') => {
+    setActiveBankId(bankId);
+    setSixteenLevels(false);
+    sixteenLevelsRef.current = false;
+    const newBank = createBankFromKit(activeKitId, bankId, measuredBoundsRef.current, null);
+    setActiveBank(newBank);
+    currentBankRef.current = newBank;
+    if (runtime) {
+      runtime.setPadBank(newBank);
+      if (measuredBoundsRef.current.size > 0) {
+        runtime.updateAllPadBounds(measuredBoundsRef.current);
+      }
+    }
+  }, [activeKitId, runtime]);
+
+  const handleToggleSixteenLevels = useCallback(() => {
+    setSixteenLevels((prev) => {
+      const next = !prev;
+      sixteenLevelsRef.current = next;
+      const targetSample = next
+        ? lastStruckSampleRef.current || currentKit.samples[0]
+        : null;
+      const newBank = createBankFromKit(
+        activeKitId,
+        activeBankId,
+        measuredBoundsRef.current,
+        targetSample
+      );
+      setActiveBank(newBank);
+      currentBankRef.current = newBank;
+      if (runtime) {
+        runtime.setPadBank(newBank);
+        if (measuredBoundsRef.current.size > 0) {
+          runtime.updateAllPadBounds(measuredBoundsRef.current);
+        }
+      }
+      return next;
+    });
+  }, [activeKitId, activeBankId, currentKit, runtime]);
+
+  const handleToggleFullLevel = useCallback(() => {
+    setFullLevel((prev) => !prev);
+  }, []);
+
+  const handleToggleNoteRepeat = useCallback(() => {
+    setNoteRepeat((prev) => {
+      const next = !prev;
+      if (!next) {
+        stopNoteRepeat();
+      }
+      return next;
+    });
+  }, [stopNoteRepeat]);
+
   // 1. Initialize Audio Engine & MIDI on boot
   useEffect(() => {
     const audioEng = new AudioEngine();
@@ -149,16 +328,42 @@ export const App: React.FC = () => {
     // Gesture Runtime initialization
     const gr = new GestureRuntime(activeBank, {
       onStrike: (strike) => {
-        audioEng.triggerPadAction(strike);
-        midiAdapter.sendNoteOn(36 + strike.padIndex, strike.velocity);
+        const isFull = fullLevelRef.current;
+        const finalStrike = isFull ? { ...strike, velocity: 1.0 } : strike;
+        audioEng.triggerPadAction(finalStrike);
+        midiAdapter.sendNoteOn(36 + strike.padIndex, finalStrike.velocity);
         cursorHandleRef.current?.update(lastHandPosRef.current, lastPinchRef.current, 1.0, true);
         setTimeout(() => {
           cursorHandleRef.current?.update(lastHandPosRef.current, lastPinchRef.current, lastConfidenceRef.current, false);
         }, 75);
+
+        // Keep track of last struck sample for 16-Levels mode
+        const padDef = currentBankRef.current.pads.find((p) => p.padIndex === strike.padIndex);
+        const action = padDef?.action;
+        if (action && action.type === 'SampleTrigger') {
+          const sampleId = action.sampleId;
+          const sample =
+            currentKit.samples.find((s) => s.id === sampleId) ||
+            CLASSIC_808_KIT.samples.find((s) => s.id === sampleId) ||
+            HEARTBREAK_KIT.samples.find((s) => s.id === sampleId);
+          if (sample) {
+            lastStruckSampleRef.current = sample;
+          }
+        }
+
+        // Note repeat tracking
+        if (noteRepeatRef.current) {
+          heldPadsRef.current.add(strike.padIndex);
+          startNoteRepeat();
+        }
       },
       onPadRelease: (padIndex) => {
         audioEng.releasePad(padIndex);
         midiAdapter.sendNoteOff(36 + padIndex);
+        heldPadsRef.current.delete(padIndex);
+        if (heldPadsRef.current.size === 0) {
+          stopNoteRepeat();
+        }
       },
       onPadStateChange: (change) => {
         setPadStates((prev) => {
@@ -285,6 +490,7 @@ export const App: React.FC = () => {
       setCameraActive(false);
       setTrackingState('idle');
       cursorHandleRef.current?.update(null, 0.15, 0, false);
+      skeletonHandleRef.current?.clear();
     } else {
       if (demoActive) {
         demoPlayerRef.current?.stop();
@@ -311,6 +517,7 @@ export const App: React.FC = () => {
         const scheduler = new CameraFrameScheduler(async (video, timestampMs) => {
           const detections = await tracker.detectForVideo(video, timestampMs);
           if (detections.length > 0 && runtime) {
+            const rawDetection = detections[0];
             const normalizedHands = detections.map((d) => normalizerRef.current.normalize(d));
             const primaryHand = normalizedHands[0];
             lastHandPosRef.current = primaryHand.indexFingertip;
@@ -324,10 +531,21 @@ export const App: React.FC = () => {
               false
             );
 
+            // Skeleton overlay coordinates mirrored to match CSS -scale-x-100 webcam
+            if (rawDetection.landmarks && rawDetection.landmarks.length >= 21) {
+              const mirroredLandmarks = rawDetection.landmarks.map((lm) => ({
+                x: 1.0 - lm.x,
+                y: lm.y,
+                z: lm.z
+              }));
+              skeletonHandleRef.current?.update(mirroredLandmarks, primaryHand.confidence);
+            }
+
             runtime.processHands(normalizedHands);
             setTrackingState((prev) => (prev !== 'tracking' ? 'tracking' : prev));
           } else {
             cursorHandleRef.current?.update(null, 0.15, 0, false);
+            skeletonHandleRef.current?.clear();
             setTrackingState((prev) => (prev !== 'idle' ? 'idle' : prev));
           }
         });
@@ -351,6 +569,7 @@ export const App: React.FC = () => {
       demoPlayerRef.current?.stop();
       setDemoActive(false);
       cursorHandleRef.current?.update(null, 0.15, 0, false);
+      skeletonHandleRef.current?.clear();
       if (songBackingActive && engine) {
         engine.backing.stop();
         setSongBackingActive(false);
@@ -399,13 +618,36 @@ export const App: React.FC = () => {
     }
   };
 
-  // 6. Manual Pointer Strike
+  // 7. Manual Pointer Strike
   const handlePointerTrigger = (padIndex: number) => {
     engine?.resume();
-    runtime?.triggerPadManual(padIndex, 0.95, 'POINTER_FALLBACK');
+    const vel = fullLevelRef.current ? 1.0 : 0.95;
+    runtime?.triggerPadManual(padIndex, vel, 'POINTER_FALLBACK');
+
+    const padDef = currentBankRef.current.pads.find((p) => p.padIndex === padIndex);
+    const action = padDef?.action;
+    if (action && action.type === 'SampleTrigger') {
+      const sampleId = action.sampleId;
+      const sample =
+        currentKit.samples.find((s) => s.id === sampleId) ||
+        CLASSIC_808_KIT.samples.find((s) => s.id === sampleId) ||
+        HEARTBREAK_KIT.samples.find((s) => s.id === sampleId);
+      if (sample) {
+        lastStruckSampleRef.current = sample;
+      }
+    }
+
+    if (noteRepeatRef.current) {
+      heldPadsRef.current.add(padIndex);
+      startNoteRepeat();
+    }
   };
 
   const handlePointerRelease = (padIndex: number) => {
+    heldPadsRef.current.delete(padIndex);
+    if (heldPadsRef.current.size === 0) {
+      stopNoteRepeat();
+    }
     runtime?.releasePadManual(padIndex);
   };
 
@@ -463,6 +705,9 @@ export const App: React.FC = () => {
       {/* Hand Cursor Marker (imperatively updated for 60fps smoothness) */}
       <HandCursor ref={cursorHandleRef} />
 
+      {/* Hand Skeleton Overlay (21 MediaPipe joints + bones in neon cyan/gold) */}
+      <HandSkeletonOverlay ref={skeletonHandleRef} visible={showSkeleton && cameraActive} />
+
       {/* Top Header Bar with Kanye Kit Selector */}
       <Header
         sourceType={sourceType}
@@ -495,6 +740,8 @@ export const App: React.FC = () => {
         trackingState={trackingState}
         songBackingActive={songBackingActive}
         onToggleSongBacking={toggleSongBacking}
+        showSkeleton={showSkeleton}
+        onToggleSkeleton={() => setShowSkeleton((prev) => !prev)}
       />
 
       {/* Center 2.5D Launchpad Stage */}
@@ -523,23 +770,22 @@ export const App: React.FC = () => {
           onToggleSongBacking={toggleSongBacking}
           transportState={transportState}
           onToggleTransport={toggleTransport}
+          activeBankId={activeBankId}
+          onSelectBank={handleSelectBank}
+          fullLevel={fullLevel}
+          onToggleFullLevel={handleToggleFullLevel}
+          sixteenLevels={sixteenLevels}
+          onToggleSixteenLevels={handleToggleSixteenLevels}
+          noteRepeat={noteRepeat}
+          onToggleNoteRepeat={handleToggleNoteRepeat}
         />
       </main>
 
       {/* Bottom Audio Waveform & Bank Selector */}
       <WaveformBar
         mixer={engine?.mixer || null}
-        activeBankId={activeBank.id}
-        onSelectBank={(b) => {
-          const newBank = createBankFromKit(activeKitId, b, measuredBoundsRef.current);
-          setActiveBank(newBank);
-          if (runtime) {
-            runtime.setPadBank(newBank);
-            if (measuredBoundsRef.current.size > 0) {
-              runtime.updateAllPadBounds(measuredBoundsRef.current);
-            }
-          }
-        }}
+        activeBankId={activeBankId}
+        onSelectBank={handleSelectBank}
       />
 
       {/* Developer Telemetry & HUD */}

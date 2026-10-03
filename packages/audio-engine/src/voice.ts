@@ -7,6 +7,7 @@ export interface VoiceTriggerOptions {
   readonly startOffsetSec?: number;
   readonly endOffsetSec?: number;
   readonly loop?: boolean;
+  readonly detune?: number; // Cents: -1200 to +1200 (100 cents = 1 semitone)
   readonly scheduledAudioTimeSec: number;
   readonly padIndex: number;
 }
@@ -26,6 +27,9 @@ export class ActiveVoice {
     this.sourceNode = this.ctx.createBufferSource();
     this.sourceNode.buffer = buffer;
     this.sourceNode.loop = !!options.loop;
+    if (options.detune !== undefined && this.sourceNode.detune) {
+      this.sourceNode.detune.setValueAtTime(options.detune, options.scheduledAudioTimeSec);
+    }
 
     this.gainNode = this.ctx.createGain();
     const finalGain = Math.max(0.0001, options.gain * Math.min(1.0, Math.max(0.1, options.velocity)));
