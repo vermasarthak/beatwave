@@ -12,6 +12,7 @@ import { Quantizer, QuantizeValue } from './quantizer.js';
 import { Mixer } from './mixer.js';
 import { PerformanceRecorder } from './recorder.js';
 import { AudioLatencyProfiler } from './profiler.js';
+import { BackingTrackPlayer } from './backing-track.js';
 
 export interface AudioEngineOptions {
   readonly sampleRate?: number;
@@ -28,6 +29,7 @@ export class AudioEngine {
   public readonly mixer: Mixer;
   public readonly recorder: PerformanceRecorder;
   public readonly profiler: AudioLatencyProfiler;
+  public readonly backing: BackingTrackPlayer;
 
   private currentSourceType: SourceType = 'procedural';
   private lookaheadBufferSec: number = 0.005; // 5ms lookahead
@@ -49,6 +51,7 @@ export class AudioEngine {
     this.mixer = new Mixer(this.ctx);
     this.recorder = new PerformanceRecorder();
     this.profiler = new AudioLatencyProfiler();
+    this.backing = new BackingTrackPlayer(this.ctx);
   }
 
   public async resume(): Promise<void> {
@@ -199,6 +202,7 @@ export class AudioEngine {
   }
 
   public dispose(): void {
+    this.backing.stop();
     this.voices.stopAll();
     this.transport.dispose();
     this.ctx.close();

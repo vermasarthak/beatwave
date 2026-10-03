@@ -10,103 +10,52 @@ export class SyntheticDemoPlayer {
   private isRunning: boolean = false;
   private animId: number | null = null;
   private startTime: number = 0;
-  private readonly loopDurationMs: number = 4000;
   private activeKitId: string = 'flashing_lights';
 
-  // Flashing Lights signature hook & electro beat choreography
+  // Flashing Lights vocal phrases synchronized to 90 BPM (10.667s loop = 16 beats)
   private readonly flashingLightsPattern: DemoHit[] = [
-    { t: 0, pad: 0 },    // Kick + F#5 String
-    { t: 250, pad: 5 },  // F#5 Violin Staccato
-    { t: 500, pad: 1 },  // Gated Snare
-    { t: 750, pad: 6 },  // E5 Violin Staccato
-    { t: 1000, pad: 0 }, // Kick
-    { t: 1250, pad: 7 }, // C#5 Violin Staccato
-    { t: 1500, pad: 4 }, // Gated Clap
-    { t: 1750, pad: 8 }, // B4 Violin Staccato
-    { t: 2000, pad: 9 }, // Strings Hook Sweep Arp
-    { t: 2250, pad: 11 },// French Electro Bass Pluck
-    { t: 2500, pad: 1 }, // Gated Snare
-    { t: 2750, pad: 10 },// Analog Brass Chord
-    { t: 3000, pad: 13 },// Vocal "Flashing"
-    { t: 3250, pad: 14 },// Vocal "Lights"
-    { t: 3500, pad: 12 },// Crystal Glockenspiel
-    { t: 3750, pad: 15 } // Sub Bass Drop
+    { t: 0, pad: 0 },     // "Flashing..."
+    { t: 900, pad: 1 },   // "...Lights"
+    { t: 1800, pad: 2 },  // "She don't believe in shooting stars"
+    { t: 4100, pad: 3 },  // "Inside our lives, until daylight"
+    { t: 6700, pad: 4 },  // "Flashing lights, flashing lights"
+    { t: 9200, pad: 15 }  // "Until daylight!"
   ];
 
-  // POWER tribal stomp, stadium clap & chant choreography
+  // POWER vocal phrases synchronized to 154 BPM (6.234s loop = 16 beats)
   private readonly powerPattern: DemoHit[] = [
-    { t: 0, pad: 0 },    // Schizoid Stomp Kick
-    { t: 250, pad: 0 },  // Double Stomp
-    { t: 500, pad: 2 },  // Stadium Clap "HAAH"
-    { t: 750, pad: 6 },  // Chant "HEY!"
-    { t: 1000, pad: 0 }, // Stomp Kick
-    { t: 1250, pad: 4 }, // Low Tribal Floor Tom
-    { t: 1500, pad: 2 }, // Stadium Clap "HAAH"
-    { t: 1750, pad: 7 }, // Chant "HAH!"
-    { t: 2000, pad: 10 },// Distorted Brass Fanfare Bb
-    { t: 2250, pad: 12 },// Fuzz Bass Guitar
-    { t: 2500, pad: 2 }, // Stadium Clap "HAAH"
-    { t: 2750, pad: 8 }, // Vocoder "21st Century"
-    { t: 3000, pad: 0 }, // Stomp Kick
-    { t: 3250, pad: 9 }, // Overdrive "Schizoid Man"
-    { t: 3500, pad: 2 }, // Stadium Clap "HAAH"
-    { t: 3750, pad: 14 } // Industrial Anvil Clang
+    { t: 0, pad: 0 },     // "No one man should have all that POWER"
+    { t: 2300, pad: 1 },  // "The clock's ticking, I just count the hours"
+    { t: 4500, pad: 5 },  // "21st Century Schizoid Man!"
+    { t: 5400, pad: 6 },  // "HEY!"
+    { t: 5800, pad: 7 }   // "HAH!"
   ];
 
-  // Runaway high E piano note & Rick James vocal chop choreography
+  // Runaway vocal phrases synchronized to 85 BPM (11.294s loop = 16 beats)
   private readonly runawayPattern: DemoHit[] = [
-    { t: 0, pad: 0 },    // High E Piano Note (ping)
-    { t: 500, pad: 0 },  // High E Piano Note (ping)
-    { t: 1000, pad: 0 }, // High E Piano Note (ping)
-    { t: 1500, pad: 0 }, // High E Piano Note (ping)
-    { t: 2000, pad: 1 }, // Distorted 808 Sub Boom Drop
-    { t: 2250, pad: 3 }, // Distorted Rimshot
-    { t: 2500, pad: 2 }, // Crisp Hip-Hop Snare
-    { t: 2750, pad: 7 }, // Vocal "Look At Ya!"
-    { t: 3000, pad: 4 }, // Piano Eb6
-    { t: 3250, pad: 5 }, // Piano C#6
-    { t: 3500, pad: 2 }, // Snare + "Ladies & Gentlemen"
-    { t: 3750, pad: 9 }  // Distorted Vocoder Solo Lead
+    { t: 0, pad: 0 },     // "Look at ya, look at ya!"
+    { t: 1900, pad: 1 },  // "Ladies and gentlemen..."
+    { t: 3600, pad: 2 },  // "And I always find, yeah I always find something wrong"
+    { t: 7600, pad: 6 },  // "Let's have a toast for the douchebags"
+    { t: 9600, pad: 13 }  // "Run away as fast as you can!"
   ];
 
-  // 808s Heartbreak Love Lockdown taiko & autotune choir
+  // 808s Heartbreak taiko & autotune choir
   private readonly heartbreakPattern: DemoHit[] = [
-    { t: 0, pad: 1 },    // Taiko Low Heartbeat
-    { t: 250, pad: 2 },  // Taiko High Heartbeat
-    { t: 500, pad: 4 },  // Hollow 808 Clap
-    { t: 750, pad: 5 },  // 808 Cowbell
-    { t: 1000, pad: 0 }, // 808 Kick
-    { t: 1250, pad: 9 }, // Auto-tune Choir C#4
-    { t: 1500, pad: 4 }, // 808 Clap
-    { t: 1750, pad: 10 },// Auto-tune Choir E4
-    { t: 2000, pad: 1 }, // Taiko Low
-    { t: 2250, pad: 12 },// Heartless Synth Pluck
-    { t: 2500, pad: 4 }, // 808 Clap
-    { t: 2750, pad: 11 },// Auto-tune Choir G#4
-    { t: 3000, pad: 0 }, // 808 Kick
-    { t: 3250, pad: 6 }, // 808 Conga
-    { t: 3500, pad: 4 }, // 808 Clap
-    { t: 3750, pad: 5 }  // 808 Cowbell
+    { t: 0, pad: 1 },
+    { t: 500, pad: 4 },
+    { t: 1000, pad: 9 },
+    { t: 2000, pad: 1 },
+    { t: 2500, pad: 4 },
+    { t: 3000, pad: 10 }
   ];
 
   // Classic 808 rhythm
   private readonly classicPattern: DemoHit[] = [
     { t: 0, pad: 0 },
-    { t: 250, pad: 2 },
     { t: 500, pad: 1 },
-    { t: 750, pad: 2 },
-    { t: 1000, pad: 0 },
-    { t: 1250, pad: 2 },
-    { t: 1500, pad: 4 },
-    { t: 1750, pad: 2 },
-    { t: 2000, pad: 12 },
-    { t: 2250, pad: 2 },
-    { t: 2500, pad: 1 },
-    { t: 2750, pad: 2 },
-    { t: 3000, pad: 0 },
-    { t: 3250, pad: 3 },
-    { t: 3500, pad: 13 },
-    { t: 3750, pad: 2 }
+    { t: 1000, pad: 4 },
+    { t: 1500, pad: 12 }
   ];
 
   constructor(
@@ -116,6 +65,19 @@ export class SyntheticDemoPlayer {
 
   public setKit(kitId: string): void {
     this.activeKitId = kitId;
+  }
+
+  private getLoopDurationMs(): number {
+    switch (this.activeKitId) {
+      case 'flashing_lights':
+        return 10667; // 4 bars at 90 BPM
+      case 'power':
+        return 6234;  // 4 bars at 154 BPM
+      case 'runaway':
+        return 11294; // 4 bars at 85 BPM
+      default:
+        return 4000;
+    }
   }
 
   private getPattern(): DemoHit[] {
@@ -151,11 +113,12 @@ export class SyntheticDemoPlayer {
     const loop = (now: DOMHighResTimeStamp) => {
       if (!this.isRunning) return;
 
+      const loopDurationMs = this.getLoopDurationMs();
       const pattern = this.getPattern();
-      const elapsed = (now - this.startTime) % this.loopDurationMs;
+      const elapsed = (now - this.startTime) % loopDurationMs;
 
       let currentHit = pattern[0];
-      let nextHit = pattern[1];
+      let nextHit = pattern[1] || pattern[0];
       for (let i = 0; i < pattern.length; i++) {
         if (elapsed >= pattern[i].t) {
           currentHit = pattern[i];
@@ -164,10 +127,10 @@ export class SyntheticDemoPlayer {
       }
 
       const timeSinceHit = elapsed - currentHit.t;
-      const isStriking = timeSinceHit >= 0 && timeSinceHit <= 60;
+      const isStriking = timeSinceHit >= 0 && timeSinceHit <= 80;
 
-      const hitDuration = (nextHit.t > currentHit.t ? nextHit.t : this.loopDurationMs) - currentHit.t;
-      const alpha = Math.min(1.0, Math.max(0.0, timeSinceHit / hitDuration));
+      const hitDuration = (nextHit.t > currentHit.t ? nextHit.t : loopDurationMs) - currentHit.t;
+      const alpha = Math.min(1.0, Math.max(0.0, timeSinceHit / Math.max(1, hitDuration)));
 
       const curPos = this.padToCoord(currentHit.pad);
       const nextPos = this.padToCoord(nextHit.pad);

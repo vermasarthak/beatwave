@@ -88,6 +88,7 @@ export const App: React.FC = () => {
   const [showCalibration, setShowCalibration] = useState<boolean>(false);
   const [showAutoKit, setShowAutoKit] = useState<boolean>(false);
   const [transportState, setTransportState] = useState<'playing' | 'stopped' | 'paused'>('stopped');
+  const [songBackingActive, setSongBackingActive] = useState<boolean>(false);
 
   // Pad visual states
   const [padStates, setPadStates] = useState<Map<number, { state: PadLifecycleState; compression: number; hoverProximity: number }>>(new Map());
@@ -187,6 +188,13 @@ export const App: React.FC = () => {
     if (engine) {
       await engine.registry.preloadKit(kitId);
       engine.setBpm(kit.bpm);
+      if (songBackingActive && kit.backingTrackUrl) {
+        await engine.backing.loadTrack(kit.backingTrackUrl);
+        engine.backing.play();
+      } else if (!kit.backingTrackUrl) {
+        engine.backing.stop();
+        setSongBackingActive(false);
+      }
     }
     setBpm(kit.bpm);
     demoPlayerRef.current?.setKit(kitId);
@@ -294,21 +302,47 @@ export const App: React.FC = () => {
   };
 
   // 4. Demo Mode Toggle
-  const toggleDemo = () => {
+  const toggleDemo = async () => {
     if (demoActive) {
       demoPlayerRef.current?.stop();
       setDemoActive(false);
       setCursorPos(null);
+      if (songBackingActive && engine) {
+        engine.backing.stop();
+        setSongBackingActive(false);
+      }
     } else {
       if (cameraActive) toggleCamera();
-      engine?.resume();
+      await engine?.resume();
       demoPlayerRef.current?.setKit(activeKitId);
       demoPlayerRef.current?.start();
       setDemoActive(true);
+      // Automatically start song backing track during demo
+      if (currentKit.backingTrackUrl && engine) {
+        await engine.backing.loadTrack(currentKit.backingTrackUrl);
+        engine.backing.play();
+        setSongBackingActive(true);
+      }
     }
   };
 
-  // 5. Transport Play/Stop
+  // 5. Song Backing Track Toggle
+  const toggleSongBacking = async () => {
+    if (!engine) return;
+    await engine.resume();
+    if (songBackingActive) {
+      engine.backing.stop();
+      setSongBackingActive(false);
+    } else {
+      if (currentKit.backingTrackUrl) {
+        await engine.backing.loadTrack(currentKit.backingTrackUrl);
+        engine.backing.play();
+        setSongBackingActive(true);
+      }
+    }
+  };
+
+  // 6. Transport Play/Stop
   const toggleTransport = () => {
     if (!engine) return;
     engine.resume();
@@ -420,6 +454,8 @@ export const App: React.FC = () => {
         transportState={transportState}
         onToggleTransport={toggleTransport}
         trackingState={trackingState}
+        songBackingActive={songBackingActive}
+        onToggleSongBacking={toggleSongBacking}
       />
 
       {/* Center 2.5D Launchpad Stage */}

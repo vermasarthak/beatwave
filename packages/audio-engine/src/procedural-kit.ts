@@ -18,6 +18,8 @@ export interface ProceduralSampleMeta {
   readonly defaultGain: number;
   readonly color?: string;
   readonly note?: string;
+  readonly lyrics?: string;
+  readonly audioUrl?: string;
 }
 
 export interface KanyeKitDefinition {
@@ -30,11 +32,12 @@ export interface KanyeKitDefinition {
   readonly themeColor: string;
   readonly accentColor: string;
   readonly description: string;
+  readonly backingTrackUrl?: string;
   readonly samples: readonly ProceduralSampleMeta[];
 }
 
 // ---------------------------------------------------------------------------
-// 1. GRADUATION: FLASHING LIGHTS KIT (2007)
+// 1. GRADUATION: FLASHING LIGHTS (VOCALS & STEMS)
 // ---------------------------------------------------------------------------
 export const FLASHING_LIGHTS_KIT: KanyeKitDefinition = {
   id: 'flashing_lights',
@@ -45,29 +48,30 @@ export const FLASHING_LIGHTS_KIT: KanyeKitDefinition = {
   bpm: 90,
   themeColor: '#e879f9', // Neon purple
   accentColor: '#38bdf8', // Electric cyan
-  description: 'Sweeping orchestral synth strings, crisp electro-disco bass, gated claps, and formant vocal hooks.',
+  description: 'Original vocal hooks & lyrics over full instrumental backing track.',
+  backingTrackUrl: '/audio/backing/flashing_lights_instrumental.wav',
   samples: [
-    { id: 'fl_kick', name: 'Electro Punch Kick', category: 'kick', defaultGain: 1.0, note: 'Punch Kick', color: '#c084fc' },
-    { id: 'fl_snare', name: 'Gated Reverb Snare', category: 'snare', defaultGain: 0.9, note: 'Gated Snare', color: '#f472b6' },
-    { id: 'fl_cl_hat', name: 'Sizzling 16th Hat', category: 'hihat', chokeGroup: 1, defaultGain: 0.8, note: 'Closed Hat', color: '#38bdf8' },
-    { id: 'fl_op_hat', name: 'Shimmering Open Hat', category: 'hihat', chokeGroup: 1, defaultGain: 0.8, note: 'Open Hat', color: '#67e8f9' },
-    { id: 'fl_clap', name: 'Layered Disco Clap', category: 'snare', defaultGain: 0.85, note: 'Disco Clap', color: '#f472b6' },
-    { id: 'fl_string_fsharp', name: 'Staccato String F#5', category: 'melodic', defaultGain: 0.9, note: 'String F#5', color: '#e879f9' },
-    { id: 'fl_string_e', name: 'Staccato String E5', category: 'melodic', defaultGain: 0.9, note: 'String E5', color: '#e879f9' },
-    { id: 'fl_string_csharp', name: 'Staccato String C#5', category: 'melodic', defaultGain: 0.9, note: 'String C#5', color: '#e879f9' },
-    { id: 'fl_string_b', name: 'Staccato String B4', category: 'melodic', defaultGain: 0.9, note: 'String B4', color: '#e879f9' },
-    { id: 'fl_string_riff', name: 'Strings Hook Sweep', category: 'melodic', defaultGain: 0.95, note: 'Strings Riff', color: '#d946ef' },
-    { id: 'fl_synth_brass', name: 'Analog Brass Chord', category: 'synth', defaultGain: 0.85, note: 'Brass Hook', color: '#a855f7' },
-    { id: 'fl_electro_bass', name: 'French Electro Bass', category: 'melodic', defaultGain: 1.0, note: 'Electro Bass', color: '#818cf8' },
-    { id: 'fl_bell_arp', name: 'Crystal Glockenspiel', category: 'synth', defaultGain: 0.8, note: 'Crystal Bell', color: '#60a5fa' },
-    { id: 'fl_vocal_flashing', name: 'Vocal "Flashing"', category: 'vocal', defaultGain: 0.9, note: 'Vocal "Flash"', color: '#f43f5e' },
-    { id: 'fl_vocal_lights', name: 'Vocal "Lights"', category: 'vocal', defaultGain: 0.9, note: 'Vocal "Lights"', color: '#fb7185' },
-    { id: 'fl_sub_bass', name: 'Deep 40Hz Sub Drop', category: 'melodic', defaultGain: 1.0, note: 'Sub Drop', color: '#6366f1' }
+    { id: 'fl_vocal_0', name: 'Flashing...', category: 'vocal', defaultGain: 1.0, note: '"Flashing"', audioUrl: '/audio/vocals/flashing_lights/fl_vocal_0.wav', color: '#c084fc' },
+    { id: 'fl_vocal_1', name: '...Lights', category: 'vocal', defaultGain: 1.0, note: '"Lights"', audioUrl: '/audio/vocals/flashing_lights/fl_vocal_1.wav', color: '#d946ef' },
+    { id: 'fl_vocal_2', name: 'She don\'t believe in shooting stars', category: 'vocal', defaultGain: 1.0, note: 'Shooting Stars', audioUrl: '/audio/vocals/flashing_lights/fl_vocal_2.wav', color: '#e879f9' },
+    { id: 'fl_vocal_3', name: 'Inside our lives, until daylight', category: 'vocal', defaultGain: 1.0, note: 'Until Daylight', audioUrl: '/audio/vocals/flashing_lights/fl_vocal_3.wav', color: '#f472b6' },
+    { id: 'fl_vocal_4', name: 'Flashing lights, flashing lights', category: 'vocal', defaultGain: 1.0, note: 'Chorus Hook', audioUrl: '/audio/vocals/flashing_lights/fl_vocal_4.wav', color: '#fb7185' },
+    { id: 'fl_vocal_5', name: 'Only girl in the world', category: 'vocal', defaultGain: 1.0, note: 'Only Girl', audioUrl: '/audio/vocals/flashing_lights/fl_vocal_5.wav', color: '#38bdf8' },
+    { id: 'fl_vocal_6', name: 'Club on a Thursday?', category: 'vocal', defaultGain: 1.0, note: 'Thursday', audioUrl: '/audio/vocals/flashing_lights/fl_vocal_6.wav', color: '#818cf8' },
+    { id: 'fl_vocal_7', name: 'Her girl birthday', category: 'vocal', defaultGain: 1.0, note: 'Birthday', audioUrl: '/audio/vocals/flashing_lights/fl_vocal_7.wav', color: '#6366f1' },
+    { id: 'fl_vocal_8', name: 'Champagne still thirsty', category: 'vocal', defaultGain: 1.0, note: 'Champagne', audioUrl: '/audio/vocals/flashing_lights/fl_vocal_8.wav', color: '#a855f7' },
+    { id: 'fl_vocal_9', name: 'Forever 21 turned thirty', category: 'vocal', defaultGain: 1.0, note: 'Turned 30', audioUrl: '/audio/vocals/flashing_lights/fl_vocal_9.wav', color: '#c084fc' },
+    { id: 'fl_vocal_10', name: 'Don\'t call your friends', category: 'vocal', defaultGain: 1.0, note: 'Call Friends', audioUrl: '/audio/vocals/flashing_lights/fl_vocal_10.wav', color: '#e879f9' },
+    { id: 'fl_vocal_11', name: 'Tell \'em you done with me', category: 'vocal', defaultGain: 1.0, note: 'Done With Me', audioUrl: '/audio/vocals/flashing_lights/fl_vocal_11.wav', color: '#f43f5e' },
+    { id: 'fl_vocal_12', name: 'Flashing lights (Whisper)', category: 'vocal', defaultGain: 0.9, note: 'Whisper', audioUrl: '/audio/vocals/flashing_lights/fl_vocal_12.wav', color: '#94a3b8' },
+    { id: 'fl_vocal_13', name: 'Hey! Hey! Hey!', category: 'vocal', defaultGain: 1.0, note: 'Hey Adlib', audioUrl: '/audio/vocals/flashing_lights/fl_vocal_13.wav', color: '#facc15' },
+    { id: 'fl_vocal_14', name: 'Dreams come true', category: 'vocal', defaultGain: 1.0, note: 'Dreams', audioUrl: '/audio/vocals/flashing_lights/fl_vocal_14.wav', color: '#67e8f9' },
+    { id: 'fl_vocal_15', name: 'Until daylight!', category: 'vocal', defaultGain: 1.0, note: 'Daylight Hit', audioUrl: '/audio/vocals/flashing_lights/fl_vocal_15.wav', color: '#38bdf8' }
   ]
 };
 
 // ---------------------------------------------------------------------------
-// 2. MBDTF: POWER KIT (2010)
+// 2. MBDTF: POWER (VOCALS & STEMS)
 // ---------------------------------------------------------------------------
 export const POWER_KIT: KanyeKitDefinition = {
   id: 'power',
@@ -78,29 +82,30 @@ export const POWER_KIT: KanyeKitDefinition = {
   bpm: 154,
   themeColor: '#ef4444', // Crimson red
   accentColor: '#eab308', // Imperial gold
-  description: 'Massive 21st Century Schizoid acoustic drum break, aggressive stadium claps, guttural chants, and distorted brass.',
+  description: 'King Crimson chants, iconic verses, and "All that POWER" hooks over the tribal drum break.',
+  backingTrackUrl: '/audio/backing/power_instrumental.wav',
   samples: [
-    { id: 'pow_kick', name: 'Schizoid Stomp Kick', category: 'kick', defaultGain: 1.0, note: 'Stomp Kick', color: '#ef4444' },
-    { id: 'pow_snare', name: 'Acoustic Snare Crack', category: 'snare', defaultGain: 0.95, note: 'Crack Snare', color: '#f97316' },
-    { id: 'pow_clap', name: 'Stadium Clap "HAAH"', category: 'snare', defaultGain: 0.9, note: 'Stadium Clap', color: '#f59e0b' },
-    { id: 'pow_tambourine', name: 'Tribal Tambourine', category: 'percussion', defaultGain: 0.75, note: 'Tambourine', color: '#eab308' },
-    { id: 'pow_tom_floor', name: 'Low Tribal Floor Tom', category: 'percussion', defaultGain: 0.9, note: 'Floor Tom', color: '#dc2626' },
-    { id: 'pow_tom_rack', name: 'High Tribal Rack Tom', category: 'percussion', defaultGain: 0.9, note: 'Rack Tom', color: '#ea580c' },
-    { id: 'pow_chant_hey', name: 'Vocal Chant "HEY!"', category: 'vocal', defaultGain: 0.95, note: 'Chant "HEY!"', color: '#f43f5e' },
-    { id: 'pow_chant_hah', name: 'Vocal Chant "HAH!"', category: 'vocal', defaultGain: 0.95, note: 'Chant "HAH!"', color: '#fb7185' },
-    { id: 'pow_schizoid_21st', name: 'Vocoder "21st Century"', category: 'vocal', defaultGain: 0.85, note: 'Vocoder Hook', color: '#facc15' },
-    { id: 'pow_schizoid_man', name: 'Overdrive "Schizoid"', category: 'vocal', defaultGain: 0.85, note: 'Schizoid Man', color: '#fbbf24' },
-    { id: 'pow_brass_bb', name: 'Distorted Brass Bb', category: 'synth', defaultGain: 0.9, note: 'Brass Fanfare', color: '#b91c1c' },
-    { id: 'pow_brass_db', name: 'Distorted Brass Db', category: 'synth', defaultGain: 0.9, note: 'Brass High', color: '#991b1b' },
-    { id: 'pow_fuzz_bass', name: 'Fuzz Bass Guitar', category: 'melodic', defaultGain: 0.95, note: 'Fuzz Bass', color: '#7f1d1d' },
-    { id: 'pow_crash_choke', name: 'Dark Crash Cymbal', category: 'hihat', defaultGain: 0.8, note: 'Crash Choke', color: '#eab308' },
-    { id: 'pow_anvil', name: 'Industrial Anvil Clang', category: 'percussion', defaultGain: 0.8, note: 'Anvil Clang', color: '#f59e0b' },
-    { id: 'pow_808_sub', name: 'Tape Saturated 808', category: 'kick', defaultGain: 1.0, note: 'Saturated 808', color: '#b91c1c' }
+    { id: 'pow_vocal_0', name: 'No one man should have all that POWER', category: 'vocal', defaultGain: 1.0, note: 'All That POWER', audioUrl: '/audio/vocals/power/pow_vocal_0.wav', color: '#ef4444' },
+    { id: 'pow_vocal_1', name: 'Clock\'s ticking, I count hours', category: 'vocal', defaultGain: 1.0, note: 'Count Hours', audioUrl: '/audio/vocals/power/pow_vocal_1.wav', color: '#f97316' },
+    { id: 'pow_vocal_2', name: 'Trippin\' off the powder', category: 'vocal', defaultGain: 1.0, note: 'Off Powder', audioUrl: '/audio/vocals/power/pow_vocal_2.wav', color: '#f59e0b' },
+    { id: 'pow_vocal_3', name: '\'Til then, the world\'s ours', category: 'vocal', defaultGain: 1.0, note: 'World\'s Ours', audioUrl: '/audio/vocals/power/pow_vocal_3.wav', color: '#eab308' },
+    { id: 'pow_vocal_4', name: 'And then they, and then they...', category: 'vocal', defaultGain: 1.0, note: 'And Then They', audioUrl: '/audio/vocals/power/pow_vocal_4.wav', color: '#fbbf24' },
+    { id: 'pow_vocal_5', name: '21st Century Schizoid Man!', category: 'vocal', defaultGain: 1.0, note: 'Schizoid Man!', audioUrl: '/audio/vocals/power/pow_vocal_5.wav', color: '#dc2626' },
+    { id: 'pow_vocal_6', name: 'HEY!', category: 'vocal', defaultGain: 1.0, note: 'Chant "HEY!"', audioUrl: '/audio/vocals/power/pow_vocal_6.wav', color: '#b91c1c' },
+    { id: 'pow_vocal_7', name: 'HAH!', category: 'vocal', defaultGain: 1.0, note: 'Chant "HAH!"', audioUrl: '/audio/vocals/power/pow_vocal_7.wav', color: '#991b1b' },
+    { id: 'pow_vocal_8', name: 'Superhero need theme music', category: 'vocal', defaultGain: 1.0, note: 'Theme Music', audioUrl: '/audio/vocals/power/pow_vocal_8.wav', color: '#f59e0b' },
+    { id: 'pow_vocal_9', name: 'POWER!', category: 'vocal', defaultGain: 1.0, note: 'POWER Shout', audioUrl: '/audio/vocals/power/pow_vocal_9.wav', color: '#ef4444' },
+    { id: 'pow_vocal_10', name: 'Screams from haters nice ring to it', category: 'vocal', defaultGain: 1.0, note: 'Nice Ring', audioUrl: '/audio/vocals/power/pow_vocal_10.wav', color: '#f97316' },
+    { id: 'pow_vocal_11', name: 'Every superhero theme music', category: 'vocal', defaultGain: 1.0, note: 'Superhero', audioUrl: '/audio/vocals/power/pow_vocal_11.wav', color: '#eab308' },
+    { id: 'pow_vocal_12', name: '21st Century!', category: 'vocal', defaultGain: 1.0, note: '21st Century', audioUrl: '/audio/vocals/power/pow_vocal_12.wav', color: '#dc2626' },
+    { id: 'pow_vocal_13', name: 'Schizoid Man!', category: 'vocal', defaultGain: 1.0, note: 'Schizoid Chop', audioUrl: '/audio/vocals/power/pow_vocal_13.wav', color: '#b91c1c' },
+    { id: 'pow_vocal_14', name: 'All that power!', category: 'vocal', defaultGain: 1.0, note: 'All Power', audioUrl: '/audio/vocals/power/pow_vocal_14.wav', color: '#ef4444' },
+    { id: 'pow_vocal_15', name: 'Make your life so exciting!', category: 'vocal', defaultGain: 1.0, note: 'Exciting!', audioUrl: '/audio/vocals/power/pow_vocal_15.wav', color: '#f59e0b' }
   ]
 };
 
 // ---------------------------------------------------------------------------
-// 3. MBDTF: RUNAWAY KIT (2010)
+// 3. MBDTF: RUNAWAY (VOCALS & STEMS)
 // ---------------------------------------------------------------------------
 export const RUNAWAY_KIT: KanyeKitDefinition = {
   id: 'runaway',
@@ -111,26 +116,28 @@ export const RUNAWAY_KIT: KanyeKitDefinition = {
   bpm: 85,
   themeColor: '#f59e0b', // Amber / Gold
   accentColor: '#38bdf8', // Ice Cyan
-  description: 'The iconic high E solo piano note, Rick James "Look at ya" vocal chops, distorted 808 boom, and outro vocoder synth.',
+  description: 'Rick James chops, "Toast to the Douchebags" verses, and outro vocoder solo.',
+  backingTrackUrl: '/audio/backing/runaway_instrumental.wav',
   samples: [
-    { id: 'run_piano_e6', name: 'The High E Piano Note', category: 'melodic', defaultGain: 1.0, note: 'High E Piano', color: '#fbbf24' },
-    { id: 'run_kick_dist', name: 'Distorted 808 Sub Boom', category: 'kick', defaultGain: 1.0, note: 'Distorted 808', color: '#d97706' },
-    { id: 'run_snare', name: 'Crisp Hip-Hop Snare', category: 'snare', defaultGain: 0.9, note: 'Crisp Snare', color: '#f59e0b' },
-    { id: 'run_rimshot', name: 'Distorted MPC Rimshot', category: 'percussion', defaultGain: 0.85, note: 'Rimshot Click', color: '#b45309' },
-    { id: 'run_piano_eb6', name: 'Solo Piano Eb6', category: 'melodic', defaultGain: 0.95, note: 'Piano Eb6', color: '#fde68a' },
-    { id: 'run_piano_csharp6', name: 'Solo Piano C#6', category: 'melodic', defaultGain: 0.95, note: 'Piano C#6', color: '#fde68a' },
-    { id: 'run_piano_a5', name: 'Solo Piano A5', category: 'melodic', defaultGain: 0.95, note: 'Piano A5', color: '#fde68a' },
-    { id: 'run_vocal_lookatya', name: 'Vocal "Look At Ya"', category: 'vocal', defaultGain: 0.9, note: '"Look At Ya"', color: '#f43f5e' },
-    { id: 'run_vocal_ladies', name: 'Vocal "Ladies & Gents"', category: 'vocal', defaultGain: 0.9, note: '"Ladies..."', color: '#ec4899' },
-    { id: 'run_vocoder_solo', name: 'Distorted Vocoder Lead', category: 'synth', defaultGain: 0.85, note: 'Vocoder Lead', color: '#a855f7' },
-    { id: 'run_acoustic_clap', name: 'Dry Studio Clap', category: 'snare', defaultGain: 0.85, note: 'Dry Clap', color: '#fb923c' },
-    { id: 'run_cl_hat', name: 'Loose Acoustic Hat', category: 'hihat', chokeGroup: 1, defaultGain: 0.75, note: 'Closed Hat', color: '#38bdf8' },
-    { id: 'run_op_hat', name: 'Sizzling Open Hat', category: 'hihat', chokeGroup: 1, defaultGain: 0.75, note: 'Open Hat', color: '#67e8f9' },
-    { id: 'run_rev_cymbal', name: 'Reverse Cymbal Swell', category: 'hihat', defaultGain: 0.8, note: 'Reverse Swell', color: '#93c5fd' },
-    { id: 'run_sub_glide', name: 'Sub Bass Glide C1', category: 'melodic', defaultGain: 0.95, note: 'Sub Glide', color: '#818cf8' },
-    { id: 'run_piano_chord', name: 'Toast F#m Piano Chord', category: 'melodic', defaultGain: 0.9, note: 'F#m Chord', color: '#c084fc' }
+    { id: 'run_vocal_0', name: 'Look at ya, look at ya!', category: 'vocal', defaultGain: 1.0, note: '"Look At Ya!"', audioUrl: '/audio/vocals/runaway/run_vocal_0.wav', color: '#f59e0b' },
+    { id: 'run_vocal_1', name: 'Ladies and gentlemen...', category: 'vocal', defaultGain: 1.0, note: 'Ladies & Gents', audioUrl: '/audio/vocals/runaway/run_vocal_1.wav', color: '#fbbf24' },
+    { id: 'run_vocal_2', name: 'Always find something wrong', category: 'vocal', defaultGain: 1.0, note: 'Find Wrong', audioUrl: '/audio/vocals/runaway/run_vocal_2.wav', color: '#d97706' },
+    { id: 'run_vocal_3', name: 'Putting up with my shit too long', category: 'vocal', defaultGain: 1.0, note: 'Too Long', audioUrl: '/audio/vocals/runaway/run_vocal_3.wav', color: '#b45309' },
+    { id: 'run_vocal_4', name: 'Finding what I don\'t like', category: 'vocal', defaultGain: 1.0, note: 'Don\'t Like', audioUrl: '/audio/vocals/runaway/run_vocal_4.wav', color: '#92400e' },
+    { id: 'run_vocal_5', name: 'Time for us to have a toast', category: 'vocal', defaultGain: 1.0, note: 'Have A Toast', audioUrl: '/audio/vocals/runaway/run_vocal_5.wav', color: '#f59e0b' },
+    { id: 'run_vocal_6', name: 'Toast for the douchebags', category: 'vocal', defaultGain: 1.0, note: 'Douchebags', audioUrl: '/audio/vocals/runaway/run_vocal_6.wav', color: '#fbbf24' },
+    { id: 'run_vocal_7', name: 'Toast for the assholes', category: 'vocal', defaultGain: 1.0, note: 'Assholes', audioUrl: '/audio/vocals/runaway/run_vocal_7.wav', color: '#f59e0b' },
+    { id: 'run_vocal_8', name: 'Toast for the scumbags', category: 'vocal', defaultGain: 1.0, note: 'Scumbags', audioUrl: '/audio/vocals/runaway/run_vocal_8.wav', color: '#d97706' },
+    { id: 'run_vocal_9', name: 'Every one of them that I know', category: 'vocal', defaultGain: 1.0, note: 'That I Know', audioUrl: '/audio/vocals/runaway/run_vocal_9.wav', color: '#b45309' },
+    { id: 'run_vocal_10', name: 'Toast for the jerkoffs', category: 'vocal', defaultGain: 1.0, note: 'Jerkoffs', audioUrl: '/audio/vocals/runaway/run_vocal_10.wav', color: '#f59e0b' },
+    { id: 'run_vocal_11', name: 'That\'ll never take work off', category: 'vocal', defaultGain: 1.0, note: 'Never Work Off', audioUrl: '/audio/vocals/runaway/run_vocal_11.wav', color: '#fbbf24' },
+    { id: 'run_vocal_12', name: 'Baby, I got a plan', category: 'vocal', defaultGain: 1.0, note: 'Got A Plan', audioUrl: '/audio/vocals/runaway/run_vocal_12.wav', color: '#d97706' },
+    { id: 'run_vocal_13', name: 'Run away as fast as you can!', category: 'vocal', defaultGain: 1.0, note: 'Fast As You Can', audioUrl: '/audio/vocals/runaway/run_vocal_13.wav', color: '#ef4444' },
+    { id: 'run_vocal_14', name: 'Run away from me, baby', category: 'vocal', defaultGain: 1.0, note: 'From Me Baby', audioUrl: '/audio/vocals/runaway/run_vocal_14.wav', color: '#dc2626' },
+    { id: 'run_vocal_15', name: 'Run away, yeah! (Outro)', category: 'vocal', defaultGain: 1.0, note: 'Vocoder Outro', audioUrl: '/audio/vocals/runaway/run_vocal_15.wav', color: '#a855f7' }
   ]
 };
+
 
 // ---------------------------------------------------------------------------
 // 4. 808s & HEARTBREAK KIT (2008)
@@ -218,6 +225,19 @@ export async function generateProceduralSample(
   id: string,
   sampleRate: number = 44100
 ): Promise<AudioBuffer> {
+  if (id.startsWith('fl_vocal_')) {
+    const idx = parseInt(id.replace('fl_vocal_', '')) || 0;
+    return synthesizeFormantVocal(sampleRate, 340 + (idx % 8) * 20, [750, 1250, 2600], 0.6, 'flash');
+  }
+  if (id.startsWith('pow_vocal_')) {
+    const idx = parseInt(id.replace('pow_vocal_', '')) || 0;
+    return synthesizeFormantVocal(sampleRate, 200 + (idx % 8) * 15, [800, 1300, 2500], 0.6, 'hey');
+  }
+  if (id.startsWith('run_vocal_')) {
+    const idx = parseInt(id.replace('run_vocal_', '')) || 0;
+    return synthesizeFormantVocal(sampleRate, 280 + (idx % 8) * 18, [500, 950, 2400], 0.6, 'lookatya');
+  }
+
   switch (id) {
     // Flashing Lights Kit
     case 'fl_kick':

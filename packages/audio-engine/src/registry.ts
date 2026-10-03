@@ -35,7 +35,21 @@ export class SampleRegistry {
 
     for (const sample of kit.samples) {
       if (!this.samples.has(sample.id)) {
-        const buffer = await generateProceduralSample(sample.id, this.ctx.sampleRate);
+        let buffer: AudioBuffer | null = null;
+        if (sample.audioUrl && typeof fetch !== 'undefined') {
+          try {
+            const res = await fetch(sample.audioUrl);
+            if (res.ok) {
+              const arrayBuffer = await res.arrayBuffer();
+              buffer = await this.ctx.decodeAudioData(arrayBuffer);
+            }
+          } catch {
+            // fallback to procedural synthesis below
+          }
+        }
+        if (!buffer) {
+          buffer = await generateProceduralSample(sample.id, this.ctx.sampleRate);
+        }
         this.registerBuffer(sample.id, sample.name, buffer);
       }
       count++;

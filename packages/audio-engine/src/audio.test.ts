@@ -96,22 +96,31 @@ describe('Kanye West Signature Kits', () => {
     }
   });
 
-  it('includes signature samples for Flashing Lights, POWER, and Runaway', async () => {
+  it('includes signature vocal samples and backing track URLs for Flashing Lights, POWER, and Runaway', async () => {
     const { FLASHING_LIGHTS_KIT, POWER_KIT, RUNAWAY_KIT, HEARTBREAK_KIT } = await import('./procedural-kit.js');
+    
+    // Check Flashing Lights vocals & backing
+    expect(FLASHING_LIGHTS_KIT.backingTrackUrl).toBe('/audio/backing/flashing_lights_instrumental.wav');
     const flIds = FLASHING_LIGHTS_KIT.samples.map((s) => s.id);
-    expect(flIds).toContain('fl_string_fsharp');
-    expect(flIds).toContain('fl_string_riff');
-    expect(flIds).toContain('fl_vocal_flashing');
+    expect(flIds).toContain('fl_vocal_0');
+    expect(flIds).toContain('fl_vocal_4');
+    expect(flIds).toContain('fl_vocal_15');
 
+    // Check POWER vocals & backing
+    expect(POWER_KIT.backingTrackUrl).toBe('/audio/backing/power_instrumental.wav');
     const powIds = POWER_KIT.samples.map((s) => s.id);
-    expect(powIds).toContain('pow_kick');
-    expect(powIds).toContain('pow_chant_hey');
-    expect(powIds).toContain('pow_schizoid_21st');
+    expect(powIds).toContain('pow_vocal_0');
+    expect(powIds).toContain('pow_vocal_5');
+    expect(powIds).toContain('pow_vocal_6');
 
+    // Check Runaway vocals & backing
+    expect(RUNAWAY_KIT.backingTrackUrl).toBe('/audio/backing/runaway_instrumental.wav');
     const runIds = RUNAWAY_KIT.samples.map((s) => s.id);
-    expect(runIds).toContain('run_piano_e6');
-    expect(runIds).toContain('run_vocal_lookatya');
+    expect(runIds).toContain('run_vocal_0');
+    expect(runIds).toContain('run_vocal_6');
+    expect(runIds).toContain('run_vocal_13');
 
+    // Check 808s Heartbreak
     const hbIds = HEARTBREAK_KIT.samples.map((s) => s.id);
     expect(hbIds).toContain('hb_taiko_low');
   });

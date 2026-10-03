@@ -34,6 +34,8 @@ interface HeaderProps {
   transportState: 'playing' | 'stopped' | 'paused';
   onToggleTransport: () => void;
   trackingState: 'idle' | 'tracking' | 'error';
+  songBackingActive: boolean;
+  onToggleSongBacking: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -55,7 +57,9 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleDebug,
   transportState,
   onToggleTransport,
-  trackingState
+  trackingState,
+  songBackingActive,
+  onToggleSongBacking
 }) => {
   const currentKit = ALL_KITS.find((k) => k.id === activeKitId) || ALL_KITS[0];
 
@@ -78,7 +82,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center gap-2 bg-white/5 px-2.5 py-1.5 rounded-lg border border-white/10 ml-2">
           <Disc3 className="w-3.5 h-3.5 text-amber-400 animate-spin" style={{ animationDuration: '8s' }} />
           <div className="flex flex-col">
-            <span className="text-[9px] uppercase font-bold tracking-widest text-slate-400">SIGNATURE KIT</span>
+            <span className="text-[9px] uppercase font-bold tracking-widest text-slate-400">SIGNATURE TRACK</span>
             <select
               value={activeKitId}
               onChange={(e) => onKitChange(e.target.value)}
@@ -94,8 +98,29 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* Center Controls: Transport, Tempo, Quantize, Source */}
+      {/* Center Controls: Play Song, Transport, Tempo, Quantize */}
       <div className="flex items-center gap-3">
+        {/* Play Song Instrumental Backing Track Button */}
+        {currentKit.backingTrackUrl && (
+          <button
+            onClick={onToggleSongBacking}
+            style={{
+              backgroundColor: songBackingActive ? `${currentKit.themeColor}33` : undefined,
+              borderColor: songBackingActive ? currentKit.themeColor : undefined,
+              color: songBackingActive ? '#ffffff' : undefined
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-bold transition shadow-md ${
+              songBackingActive
+                ? 'border animate-pulse ring-1 ring-white/20'
+                : 'bg-white/10 text-white hover:bg-white/15 border border-white/20'
+            }`}
+            title="Play the continuous instrumental song backing track"
+          >
+            <Music2 className="w-4 h-4 text-cyan-300" />
+            <span>{songBackingActive ? 'PAUSE SONG' : 'PLAY SONG'}</span>
+          </button>
+        )}
+
         {/* Transport Play/Stop */}
         <button
           onClick={onToggleTransport}
@@ -179,10 +204,10 @@ export const Header: React.FC<HeaderProps> = ({
               ? 'border animate-pulse shadow-lg'
               : 'bg-white/5 text-slate-300 hover:bg-white/10 border border-white/5'
           }`}
-          title="Play signature track hook & beat"
+          title="Play signature song & vocal choreography"
         >
           <Activity className="w-3.5 h-3.5 text-amber-300" />
-          <span>Demo Hook</span>
+          <span>Demo Vocals</span>
         </button>
 
         {/* Camera Toggle */}

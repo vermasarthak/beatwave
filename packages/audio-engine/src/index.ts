@@ -7,4 +7,5 @@ export * from './transport.js';
 export * from './mixer.js';
 export * from './recorder.js';
 export * from './profiler.js';
+export * from './backing-track.js';
 export * from './engine.js';
