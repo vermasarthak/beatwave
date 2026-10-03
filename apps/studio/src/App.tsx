@@ -9,7 +9,12 @@ import {
   Point3D,
   TelemetryMetrics
 } from '@beatwave/protocol';
-import { AudioEngine } from '@beatwave/audio-engine';
+import {
+  AudioEngine,
+  ALL_KITS,
+  FLASHING_LIGHTS_KIT,
+  KanyeKitDefinition
+} from '@beatwave/audio-engine';
 import { GestureRuntime } from '@beatwave/gesture-runtime';
 import {
   MediaPipeHandTracker,
@@ -27,43 +32,34 @@ import { CalibrationModal } from './components/CalibrationModal.js';
 import { AutoKitModal } from './components/AutoKitModal.js';
 import { SyntheticDemoPlayer } from './demo/SyntheticDemoPlayer.js';
 
-function createDefaultBank(id: 'A' | 'B' | 'C' | 'D' = 'A'): PadBank {
-  const padLabels = [
-    'Kick 808', 'Snare', 'Closed Hat', 'Open Hat',
-    'Clap', 'Rimshot', 'Low Tom', 'High Tom',
-    'Crash', 'Ride', 'Shaker', 'Cowbell',
-    'Sub Bass', 'FM Chord C', 'FM Chord Eb', 'FM Chord G'
-  ];
-
-  const sampleIds = [
-    'proc_kick', 'proc_snare', 'proc_cl_hat', 'proc_op_hat',
-    'proc_clap', 'proc_rim', 'proc_tom_lo', 'proc_tom_hi',
-    'proc_crash', 'proc_ride', 'proc_shaker', 'proc_cowbell',
-    'proc_sub_bass', 'proc_chord_c', 'proc_chord_eb', 'proc_chord_g'
-  ];
-
+function createBankFromKit(kitId: string, bankId: 'A' | 'B' | 'C' | 'D' = 'A'): PadBank {
+  const kit = ALL_KITS.find((k) => k.id === kitId) || FLASHING_LIGHTS_KIT;
   return {
-    id,
-    name: `Bank ${id}`,
-    pads: Array.from({ length: 16 }, (_, i) => ({
-      id: `pad_${id}_${i}`,
-      padIndex: i,
-      label: padLabels[i] || `Pad ${i + 1}`,
-      color: '#38bdf8',
-      bounds: {
-        minX: (i % 4) * 0.22 + 0.06,
-        maxX: (i % 4) * 0.22 + 0.24,
-        minY: Math.floor(i / 4) * 0.22 + 0.06,
-        maxY: Math.floor(i / 4) * 0.22 + 0.24
-      },
-      action: {
-        type: 'SampleTrigger',
-        sampleId: sampleIds[i] || 'proc_kick',
-        gain: 1.0,
-        pan: 0,
-        chokeGroup: i === 2 || i === 3 ? 1 : undefined
-      }
-    }))
+    id: bankId,
+    name: `${kit.name} (${bankId})`,
+    pads: Array.from({ length: 16 }, (_, i) => {
+      const sample = kit.samples[i] || kit.samples[0];
+      return {
+        id: `pad_${bankId}_${i}`,
+        padIndex: i,
+        label: sample.note || sample.name,
+        color: sample.color || kit.themeColor,
+        bounds: {
+          minX: (i % 4) * 0.22 + 0.06,
+          maxX: (i % 4) * 0.22 + 0.24,
+          minY: Math.floor(i / 4) * 0.22 + 0.06,
+          maxY: Math.floor(i / 4) * 0.22 + 0.24
+        },
+        action: {
+          type: 'SampleTrigger',
+          sampleId: sample.id,
+          gain: sample.defaultGain,
+          pan: 0,
+          chokeGroup: sample.chokeGroup
+        },
+        chokeGroup: sample.chokeGroup
+      };
+    })
   };
 }
 
@@ -76,10 +72,14 @@ export const App: React.FC = () => {
   const [storage] = useState(() => new LocalStorageManager());
   const [midiAdapter] = useState(() => (typeof navigator !== 'undefined' && 'requestMIDIAccess' in navigator ? new WebMidiAdapter() : new MockMidiAdapter()));
 
+  // Active Kanye Kit state
+  const [activeKitId, setActiveKitId] = useState<string>('flashing_lights');
+  const currentKit = ALL_KITS.find((k) => k.id === activeKitId) || FLASHING_LIGHTS_KIT;
+
   // UI state
-  const [activeBank, setActiveBank] = useState<PadBank>(() => createDefaultBank('A'));
+  const [activeBank, setActiveBank] = useState<PadBank>(() => createBankFromKit('flashing_lights', 'A'));
   const [sourceType, setSourceType] = useState<SourceType>('procedural');
-  const [bpm, setBpm] = useState<number>(120);
+  const [bpm, setBpm] = useState<number>(FLASHING_LIGHTS_KIT.bpm);
   const [quantize, setQuantize] = useState<QuantizeGrid>('off');
   const [cameraActive, setCameraActive] = useState<boolean>(false);
   const [trackingState, setTrackingState] = useState<'idle' | 'tracking' | 'error'>('idle');
@@ -122,9 +122,9 @@ export const App: React.FC = () => {
     const audioEng = new AudioEngine();
     setEngine(audioEng);
 
-    // Preload procedural 808 kit
-    audioEng.registry.preloadProceduralKit().then(() => {
-      console.log('[Beatwave] Procedural 808 Kit preloaded successfully.');
+    // Preload signature Flashing Lights kit
+    audioEng.registry.preloadKit('flashing_lights').then(() => {
+      console.log('[Beatwave] Flashing Lights Kit preloaded successfully.');
     });
 
     // Initialize MIDI
@@ -166,12 +166,31 @@ export const App: React.FC = () => {
       setCursorStriking(striking);
       setHandConfidence(0.98);
     });
+    demoPlayerRef.current.setKit('flashing_lights');
 
     return () => {
       audioEng.dispose();
       demoPlayerRef.current?.stop();
     };
   }, []);
+
+  // Handle Kanye Kit change
+  const handleKitChange = async (kitId: string) => {
+    setActiveKitId(kitId);
+    const kit = ALL_KITS.find((k) => k.id === kitId) || FLASHING_LIGHTS_KIT;
+    const newBank = createBankFromKit(kitId, activeBank.id);
+    setActiveBank(newBank);
+
+    if (runtime) {
+      runtime.setPadBank(newBank);
+    }
+    if (engine) {
+      await engine.registry.preloadKit(kitId);
+      engine.setBpm(kit.bpm);
+    }
+    setBpm(kit.bpm);
+    demoPlayerRef.current?.setKit(kitId);
+  };
 
   // 2. Keyboard fallback triggers
   useEffect(() => {
@@ -265,9 +284,10 @@ export const App: React.FC = () => {
         if (videoRef.current) {
           scheduler.start(videoRef.current);
         }
+
         setCameraActive(true);
       } catch (err) {
-        console.error('[Beatwave] Webcam permission or initialization error:', err);
+        console.error('[Beatwave] Camera initialization failed:', err);
         setTrackingState('error');
       }
     }
@@ -280,20 +300,19 @@ export const App: React.FC = () => {
       setDemoActive(false);
       setCursorPos(null);
     } else {
-      if (cameraActive) {
-        toggleCamera();
-      }
+      if (cameraActive) toggleCamera();
       engine?.resume();
+      demoPlayerRef.current?.setKit(activeKitId);
       demoPlayerRef.current?.start();
       setDemoActive(true);
     }
   };
 
-  // 5. Transport Controls
+  // 5. Transport Play/Stop
   const toggleTransport = () => {
     if (!engine) return;
     engine.resume();
-    if (engine.transport.state === 'playing') {
+    if (transportState === 'playing') {
       engine.transport.stop();
       setTransportState('stopped');
     } else {
@@ -355,8 +374,13 @@ export const App: React.FC = () => {
         }`}
       />
 
-      {/* Atmospheric ambient lighting & grid backdrop */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(56,189,248,0.06),transparent_70%)] pointer-events-none" />
+      {/* Atmospheric ambient lighting matching active Kanye track */}
+      <div
+        style={{
+          background: `radial-gradient(circle at 50% 45%, ${currentKit.themeColor}1a 0%, transparent 65%)`
+        }}
+        className="absolute inset-0 pointer-events-none transition-all duration-700"
+      />
 
       {/* Hand Cursor Marker */}
       <HandCursor
@@ -366,7 +390,7 @@ export const App: React.FC = () => {
         isStriking={cursorStriking}
       />
 
-      {/* Top Header Bar */}
+      {/* Top Header Bar with Kanye Kit Selector */}
       <Header
         sourceType={sourceType}
         onSourceChange={(s) => {
@@ -383,6 +407,8 @@ export const App: React.FC = () => {
           setQuantize(q);
           engine?.setQuantize(q);
         }}
+        activeKitId={activeKitId}
+        onKitChange={handleKitChange}
         cameraActive={cameraActive}
         onToggleCamera={toggleCamera}
         onOpenCalibration={() => setShowCalibration(true)}
@@ -397,7 +423,18 @@ export const App: React.FC = () => {
       />
 
       {/* Center 2.5D Launchpad Stage */}
-      <main className="flex-1 flex items-center justify-center p-4 z-10">
+      <main className="flex-1 flex flex-col items-center justify-center p-3 z-10">
+        {/* Track Banner */}
+        <div className="mb-2 flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-black/40 border border-white/10 backdrop-blur-md text-xs">
+          <span
+            style={{ backgroundColor: currentKit.themeColor }}
+            className="w-2 h-2 rounded-full animate-ping"
+          />
+          <span className="font-extrabold text-white tracking-wide">{currentKit.name}</span>
+          <span className="text-slate-400 font-medium">• {currentKit.album} ({currentKit.year})</span>
+          <span className="text-slate-500 hidden sm:inline">• {currentKit.description}</span>
+        </div>
+
         <FloatingPadGrid
           bank={activeBank}
           padStates={padStates}
@@ -411,7 +448,7 @@ export const App: React.FC = () => {
         mixer={engine?.mixer || null}
         activeBankId={activeBank.id}
         onSelectBank={(b) => {
-          const newBank = createDefaultBank(b);
+          const newBank = createBankFromKit(activeKitId, b);
           setActiveBank(newBank);
           runtime?.setPadBank(newBank);
         }}

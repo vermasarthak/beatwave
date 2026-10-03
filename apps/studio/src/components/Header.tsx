@@ -8,9 +8,11 @@ import {
   Pause,
   Activity,
   Sparkles,
-  Maximize2
+  Disc3,
+  Music2
 } from 'lucide-react';
 import { SourceType, QuantizeGrid } from '@beatwave/protocol';
+import { ALL_KITS, KanyeKitDefinition } from '@beatwave/audio-engine';
 
 interface HeaderProps {
   sourceType: SourceType;
@@ -19,6 +21,8 @@ interface HeaderProps {
   onBpmChange: (b: number) => void;
   quantize: QuantizeGrid;
   onQuantizeChange: (q: QuantizeGrid) => void;
+  activeKitId: string;
+  onKitChange: (kitId: string) => void;
   cameraActive: boolean;
   onToggleCamera: () => void;
   onOpenCalibration: () => void;
@@ -39,6 +43,8 @@ export const Header: React.FC<HeaderProps> = ({
   onBpmChange,
   quantize,
   onQuantizeChange,
+  activeKitId,
+  onKitChange,
   cameraActive,
   onToggleCamera,
   onOpenCalibration,
@@ -51,17 +57,41 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleTransport,
   trackingState
 }) => {
+  const currentKit = ALL_KITS.find((k) => k.id === activeKitId) || ALL_KITS[0];
+
   return (
-    <header className="h-14 px-4 glass-panel border-b border-white/10 flex items-center justify-between text-xs select-none z-30">
-      {/* Brand & Tagline */}
+    <header className="h-16 px-4 glass-panel border-b border-white/10 flex items-center justify-between text-xs select-none z-30">
+      {/* Brand, Tagline & Active Kanye Track Badge */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2">
-          <div className="w-3.5 h-3.5 rounded-full bg-cyan-400 shadow-[0_0_10px_#38bdf8]" />
-          <span className="font-bold tracking-wider text-sm text-white">BEATWAVE</span>
+          <div
+            style={{
+              backgroundColor: currentKit.themeColor,
+              boxShadow: `0 0 12px ${currentKit.themeColor}`
+            }}
+            className="w-3.5 h-3.5 rounded-full transition-all duration-300"
+          />
+          <span className="font-extrabold tracking-wider text-sm text-white">BEATWAVE</span>
         </div>
-        <span className="hidden md:inline text-slate-400 border-l border-white/10 pl-3 italic text-[11px]">
-          Your hands are the controller.
-        </span>
+
+        {/* Kanye Track / Kit Selector */}
+        <div className="flex items-center gap-2 bg-white/5 px-2.5 py-1.5 rounded-lg border border-white/10 ml-2">
+          <Disc3 className="w-3.5 h-3.5 text-amber-400 animate-spin" style={{ animationDuration: '8s' }} />
+          <div className="flex flex-col">
+            <span className="text-[9px] uppercase font-bold tracking-widest text-slate-400">SIGNATURE KIT</span>
+            <select
+              value={activeKitId}
+              onChange={(e) => onKitChange(e.target.value)}
+              className="bg-transparent text-white font-bold focus:outline-none cursor-pointer text-xs"
+            >
+              {ALL_KITS.map((k) => (
+                <option key={k.id} value={k.id} className="bg-[#12151b] text-white">
+                  {k.name} ({k.album})
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
 
       {/* Center Controls: Transport, Tempo, Quantize, Source */}
@@ -116,7 +146,7 @@ export const Header: React.FC<HeaderProps> = ({
             onChange={(e) => onSourceChange(e.target.value as SourceType)}
             className="bg-transparent text-cyan-300 font-medium focus:outline-none cursor-pointer"
           >
-            <option value="procedural" className="bg-[#12151b]">Procedural 808</option>
+            <option value="procedural" className="bg-[#12151b]">Procedural Synth</option>
             <option value="local" className="bg-[#12151b]">Local Audio</option>
             <option value="spotify" className="bg-[#12151b]">Spotify (Transport)</option>
             <option value="midi_only" className="bg-[#12151b]">MIDI Out Only</option>
@@ -139,15 +169,20 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Demo Mode Button */}
         <button
           onClick={onToggleDemo}
-          className={`flex items-center gap-1 px-2.5 py-1.5 rounded transition font-medium ${
+          style={{
+            backgroundColor: demoActive ? `${currentKit.themeColor}33` : undefined,
+            borderColor: demoActive ? currentKit.themeColor : undefined,
+            color: demoActive ? '#ffffff' : undefined
+          }}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded transition font-medium ${
             demoActive
-              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse'
+              ? 'border animate-pulse shadow-lg'
               : 'bg-white/5 text-slate-300 hover:bg-white/10 border border-white/5'
           }`}
-          title="Automated Interactive Demo (no camera needed)"
+          title="Play signature track hook & beat"
         >
           <Activity className="w-3.5 h-3.5 text-amber-300" />
-          <span>Demo</span>
+          <span>Demo Hook</span>
         </button>
 
         {/* Camera Toggle */}

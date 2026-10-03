@@ -82,3 +82,38 @@ describe('AudioLatencyProfiler', () => {
     expect(stats.p95Ms).toBeGreaterThanOrEqual(stats.p50Ms);
   });
 });
+
+describe('Kanye West Signature Kits', () => {
+  it('defines 5 kits each with exactly 16 pads and unique IDs', async () => {
+    const { ALL_KITS } = await import('./procedural-kit.js');
+    expect(ALL_KITS.length).toBe(5);
+    for (const kit of ALL_KITS) {
+      expect(kit.samples.length).toBe(16);
+      expect(kit.name.length).toBeGreaterThan(0);
+      expect(kit.bpm).toBeGreaterThan(40);
+      const ids = new Set(kit.samples.map((s) => s.id));
+      expect(ids.size).toBe(16);
+    }
+  });
+
+  it('includes signature samples for Flashing Lights, POWER, and Runaway', async () => {
+    const { FLASHING_LIGHTS_KIT, POWER_KIT, RUNAWAY_KIT, HEARTBREAK_KIT } = await import('./procedural-kit.js');
+    const flIds = FLASHING_LIGHTS_KIT.samples.map((s) => s.id);
+    expect(flIds).toContain('fl_string_fsharp');
+    expect(flIds).toContain('fl_string_riff');
+    expect(flIds).toContain('fl_vocal_flashing');
+
+    const powIds = POWER_KIT.samples.map((s) => s.id);
+    expect(powIds).toContain('pow_kick');
+    expect(powIds).toContain('pow_chant_hey');
+    expect(powIds).toContain('pow_schizoid_21st');
+
+    const runIds = RUNAWAY_KIT.samples.map((s) => s.id);
+    expect(runIds).toContain('run_piano_e6');
+    expect(runIds).toContain('run_vocal_lookatya');
+
+    const hbIds = HEARTBREAK_KIT.samples.map((s) => s.id);
+    expect(hbIds).toContain('hb_taiko_low');
+  });
+});
+

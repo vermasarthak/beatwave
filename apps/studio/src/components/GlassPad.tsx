@@ -24,6 +24,8 @@ export const GlassPad: React.FC<GlassPadProps> = ({
   const isArmed = state === 'ARMED';
   const isStruck = state === 'STRIKE' || state === 'HELD';
 
+  const padColor = pad.color || '#38bdf8';
+
   // Dynamic spring translation along Z
   const zTranslate = isStruck ? -24 * compression : isArmed ? -6 : isHovered ? -2 : 0;
   const brightnessBoost = isStruck ? 0.35 : isArmed ? 0.2 : isHovered ? 0.08 * hoverProximity : 0;
@@ -34,52 +36,64 @@ export const GlassPad: React.FC<GlassPadProps> = ({
       onPointerUp={() => onPointerUp(pad.padIndex)}
       style={{
         transform: `translateZ(${zTranslate}px)`,
-        backgroundColor: `rgba(255, 255, 255, ${0.04 + brightnessBoost})`
-      }}
-      className={`relative rounded-xl p-3 flex flex-col justify-between cursor-pointer border select-none transition-all duration-75 ${
-        isStruck
-          ? 'pad-strike border-cyan-400'
+        backgroundColor: isStruck
+          ? `${padColor}44`
           : isArmed
-          ? 'pad-armed border-amber-400/80'
+          ? `${padColor}22`
+          : `rgba(255, 255, 255, ${0.04 + brightnessBoost})`,
+        borderColor: isStruck
+          ? padColor
+          : isArmed
+          ? `${padColor}99`
           : isHovered
-          ? 'pad-hover border-cyan-400/40'
-          : 'pad-glass border-white/10'
-      }`}
+          ? `${padColor}66`
+          : 'rgba(255, 255, 255, 0.1)',
+        boxShadow: isStruck
+          ? `0 0 24px ${padColor}88, inset 0 0 16px ${padColor}44`
+          : isArmed
+          ? `0 0 12px ${padColor}44`
+          : undefined
+      }}
+      className="relative rounded-2xl p-3 flex flex-col justify-between cursor-pointer border select-none transition-all duration-75 group shadow-lg backdrop-blur-md"
     >
       {/* Top row: Pad index & keyboard shortcut */}
-      <div className="flex justify-between items-center text-[11px] font-mono text-slate-400">
-        <span className="font-semibold text-slate-300">{pad.padIndex + 1}</span>
-        <span className="bg-white/5 px-1.5 py-0.5 rounded text-[10px] text-slate-400 border border-white/5">
+      <div className="flex justify-between items-center text-[11px] font-mono">
+        <span className="font-semibold text-slate-300 group-hover:text-white transition-colors">
+          {pad.padIndex + 1}
+        </span>
+        <span className="bg-white/10 px-1.5 py-0.5 rounded text-[10px] text-slate-300 border border-white/10 font-bold">
           {shortcutKey}
         </span>
       </div>
 
-      {/* Center: Pad Label */}
-      <div className="my-auto text-center">
-        <span
-          className={`text-xs font-medium tracking-wide transition-colors ${
-            isStruck ? 'text-white font-bold' : isArmed ? 'text-amber-200' : 'text-slate-200'
+      {/* Center: Pad Main Label */}
+      <div className="my-auto text-center px-1">
+        <div
+          className={`text-xs font-semibold tracking-wide transition-colors leading-tight ${
+            isStruck ? 'text-white' : isArmed ? 'text-amber-100' : 'text-slate-100'
           }`}
         >
           {pad.label}
-        </span>
+        </div>
       </div>
 
       {/* Bottom: Action summary & status ring */}
       <div className="flex justify-between items-center text-[10px] text-slate-400">
-        <span className="truncate max-w-[80px] font-mono">
-          {pad.action.type === 'SampleTrigger' ? pad.action.sampleId.replace('proc_', '') : pad.action.type}
+        <span className="truncate max-w-[85px] font-mono text-[9px] text-slate-400 uppercase tracking-wider">
+          {pad.action.type === 'SampleTrigger' ? pad.action.sampleId.replace(/^(fl_|pow_|run_|hb_|proc_)/, '') : pad.action.type}
         </span>
         {/* Glow indicator dot */}
         <div
-          className={`w-2 h-2 rounded-full transition-all ${
-            isStruck
-              ? 'bg-cyan-300 shadow-[0_0_8px_#38bdf8]'
-              : isArmed
-              ? 'bg-amber-400 shadow-[0_0_6px_#f59e0b]'
-              : isHovered
-              ? 'bg-cyan-500/60'
-              : 'bg-white/10'
+          style={{
+            backgroundColor: isStruck || isArmed ? padColor : undefined,
+            boxShadow: isStruck ? `0 0 10px ${padColor}` : undefined
+          }}
+          className={`w-2.5 h-2.5 rounded-full transition-all ${
+            !isStruck && !isArmed
+              ? isHovered
+                ? 'bg-white/60'
+                : 'bg-white/15'
+              : ''
           }`}
         />
       </div>

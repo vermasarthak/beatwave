@@ -1,4 +1,9 @@
-import { PROCEDURAL_KIT_METADATA, generateProceduralSample } from './procedural-kit.js';
+import {
+  ALL_KITS,
+  PROCEDURAL_KIT_METADATA,
+  generateProceduralSample,
+  KanyeKitDefinition
+} from './procedural-kit.js';
 
 export class SampleRegistry {
   private readonly samples: Map<string, AudioBuffer> = new Map();
@@ -7,6 +12,7 @@ export class SampleRegistry {
 
   constructor(private readonly ctx: AudioContext) {}
 
+  /** Preloads all procedural samples across all kits */
   public async preloadProceduralKit(onProgress?: (loaded: number, total: number) => void): Promise<void> {
     const total = PROCEDURAL_KIT_METADATA.length;
     let count = 0;
@@ -19,6 +25,24 @@ export class SampleRegistry {
       count++;
       onProgress?.(count, total);
     }
+  }
+
+  /** Preloads a specific Kanye kit into the registry */
+  public async preloadKit(kitId: string, onProgress?: (loaded: number, total: number) => void): Promise<KanyeKitDefinition | undefined> {
+    const kit = ALL_KITS.find((k) => k.id === kitId) || ALL_KITS[0];
+    const total = kit.samples.length;
+    let count = 0;
+
+    for (const sample of kit.samples) {
+      if (!this.samples.has(sample.id)) {
+        const buffer = await generateProceduralSample(sample.id, this.ctx.sampleRate);
+        this.registerBuffer(sample.id, sample.name, buffer);
+      }
+      count++;
+      onProgress?.(count, total);
+    }
+
+    return kit;
   }
 
   public registerBuffer(id: string, name: string, buffer: AudioBuffer): void {
