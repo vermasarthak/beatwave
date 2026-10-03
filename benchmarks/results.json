@@ -1,5 +1,5 @@
 {
-  "benchmarkTimestamp": "2026-10-03T04:30:08.309Z",
+  "benchmarkTimestamp": "2026-10-03T04:50:08.757Z",
   "environment": {
     "platform": "darwin",
     "arch": "arm64",
@@ -10,16 +10,16 @@
       "mean": 0.0005,
       "p50": 0.0002,
       "p95": 0.0008,
-      "p99": 0.0015
+      "p99": 0.002
     },
     "landmarkNormalizationMs": {
-      "mean": 0.0013,
+      "mean": 0.0014,
       "p50": 0.0008,
       "p95": 0.0022,
-      "p99": 0.0052
+      "p99": 0.0037
     },
     "kinematicFeaturesMs": {
-      "mean": 0.0006,
+      "mean": 0.0005,
       "p50": 0.0005,
       "p95": 0.0005,
       "p99": 0.0006
@@ -27,13 +27,13 @@
     "full16PadFSMProcessMs": {
       "mean": 0.0029,
       "p50": 0.0009,
-      "p95": 0.0062,
-      "p99": 0.0066
+      "p95": 0.0063,
+      "p99": 0.0069
     },
     "audioQuantizerScheduleMs": {
       "mean": 0.0002,
       "p50": 0.0002,
-      "p95": 0.0003,
+      "p95": 0.0002,
       "p99": 0.0003
     },
     "endToEndSoftwareDecisionLatencyMs": {
