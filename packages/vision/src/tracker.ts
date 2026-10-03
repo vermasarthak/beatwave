@@ -25,14 +25,13 @@ export class MediaPipeHandTracker implements IHandTracker {
       const HandLandmarker = tasksVision.HandLandmarker;
 
       const wasmFileset = await FilesetResolver.forVisionTasks(
-        this.wasmLoaderPath || 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm'
+        this.wasmLoaderPath || '/wasm'
       );
 
       this.handLandmarker = await HandLandmarker.createFromOptions(wasmFileset, {
         baseOptions: {
           modelAssetPath:
-            this.modelAssetPath ||
-            'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',
+            this.modelAssetPath || '/models/hand_landmarker.task',
           delegate: 'GPU'
         },
         runningMode: 'VIDEO',
@@ -44,18 +43,18 @@ export class MediaPipeHandTracker implements IHandTracker {
 
       this.isInitialized = true;
     } catch (err) {
-      console.warn('[MediaPipeHandTracker] WebGL/GPU init failed or network offline; falling back to CPU delegate', err);
-      // Attempt CPU delegate fallback
+      console.warn('[MediaPipeHandTracker] GPU/Local init fallback to CPU or remote CDN:', err);
+      // Attempt CPU delegate fallback with local/remote
       const tasksVision = await import('@mediapipe/tasks-vision');
       const FilesetResolver = tasksVision.FilesetResolver;
       const HandLandmarker = tasksVision.HandLandmarker;
       const wasmFileset = await FilesetResolver.forVisionTasks(
-        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm'
+        this.wasmLoaderPath || '/wasm'
       );
       this.handLandmarker = await HandLandmarker.createFromOptions(wasmFileset, {
         baseOptions: {
           modelAssetPath:
-            'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',
+            this.modelAssetPath || '/models/hand_landmarker.task',
           delegate: 'CPU'
         },
         runningMode: 'VIDEO',

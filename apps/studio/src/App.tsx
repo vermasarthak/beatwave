@@ -25,7 +25,7 @@ import { WebMidiAdapter, MockMidiAdapter, MidiGestureMapper } from '@beatwave/mi
 import { LocalStorageManager } from '@beatwave/storage';
 import { Header } from './components/Header.js';
 import { FloatingPadGrid } from './components/FloatingPadGrid.js';
-import { HandCursor } from './components/HandCursor.js';
+import { HandCursor, HandCursorHandle } from './components/HandCursor.js';
 import { WaveformBar } from './components/WaveformBar.js';
 import { DebugOverlay } from './components/DebugOverlay.js';
 import { CalibrationModal } from './components/CalibrationModal.js';
@@ -93,11 +93,11 @@ export const App: React.FC = () => {
   // Pad visual states
   const [padStates, setPadStates] = useState<Map<number, { state: PadLifecycleState; compression: number; hoverProximity: number }>>(new Map());
 
-  // Cursor tracking
-  const [cursorPos, setCursorPos] = useState<Point3D | null>(null);
-  const [cursorPinch, setCursorPinch] = useState<number>(0.15);
-  const [cursorStriking, setCursorStriking] = useState<boolean>(false);
-  const [handConfidence, setHandConfidence] = useState<number>(0);
+  // High-performance imperative cursor tracking (bypasses 60fps React re-renders)
+  const cursorHandleRef = useRef<HandCursorHandle | null>(null);
+  const lastHandPosRef = useRef<Point3D | null>(null);
+  const lastPinchRef = useRef<number>(0.15);
+  const lastConfidenceRef = useRef<number>(0);
 
   // Telemetry metrics
   const [metrics, setMetrics] = useState<TelemetryMetrics>({
@@ -123,9 +123,9 @@ export const App: React.FC = () => {
     const audioEng = new AudioEngine();
     setEngine(audioEng);
 
-    // Preload signature Flashing Lights kit
-    audioEng.registry.preloadKit('flashing_lights').then(() => {
-      console.log('[Beatwave] Flashing Lights Kit preloaded successfully.');
+    // Preload ALL signature kits concurrently in background for zero latency
+    audioEng.registry.preloadAllKits().then(() => {
+      console.log('[Beatwave] All signature kits preloaded in memory successfully.');
     });
 
     // Initialize MIDI
@@ -138,8 +138,10 @@ export const App: React.FC = () => {
       onStrike: (strike) => {
         audioEng.triggerPadAction(strike);
         midiAdapter.sendNoteOn(36 + strike.padIndex, strike.velocity);
-        setCursorStriking(true);
-        setTimeout(() => setCursorStriking(false), 80);
+        cursorHandleRef.current?.update(lastHandPosRef.current, lastPinchRef.current, 1.0, true);
+        setTimeout(() => {
+          cursorHandleRef.current?.update(lastHandPosRef.current, lastPinchRef.current, lastConfidenceRef.current, false);
+        }, 75);
       },
       onPadRelease: (padIndex) => {
         audioEng.releasePad(padIndex);
@@ -162,10 +164,10 @@ export const App: React.FC = () => {
 
     // Demo player setup
     demoPlayerRef.current = new SyntheticDemoPlayer(gr, (pos, pinch, striking) => {
-      setCursorPos(pos);
-      setCursorPinch(pinch);
-      setCursorStriking(striking);
-      setHandConfidence(0.98);
+      lastHandPosRef.current = pos;
+      lastPinchRef.current = pinch;
+      lastConfidenceRef.current = 0.98;
+      cursorHandleRef.current?.update(pos, pinch, 0.98, striking);
     });
     demoPlayerRef.current.setKit('flashing_lights');
 
@@ -252,7 +254,7 @@ export const App: React.FC = () => {
       }
       setCameraActive(false);
       setTrackingState('idle');
-      setCursorPos(null);
+      cursorHandleRef.current?.update(null, 0.15, 0, false);
     } else {
       if (demoActive) {
         demoPlayerRef.current?.stop();
@@ -261,14 +263,18 @@ export const App: React.FC = () => {
       try {
         engine?.resume();
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { width: 640, height: 480, frameRate: { ideal: 60 } }
+          video: {
+            width: { ideal: 640 },
+            height: { ideal: 480 },
+            frameRate: { ideal: 30, max: 30 }
+          }
         });
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           await videoRef.current.play();
         }
 
-        const tracker = new MediaPipeHandTracker();
+        const tracker = new MediaPipeHandTracker('/wasm', '/models/hand_landmarker.task');
         trackerRef.current = tracker;
         await tracker.initialize();
 
@@ -277,14 +283,22 @@ export const App: React.FC = () => {
           if (detections.length > 0 && runtime) {
             const normalizedHands = detections.map((d) => normalizerRef.current.normalize(d));
             const primaryHand = normalizedHands[0];
-            setCursorPos(primaryHand.indexFingertip);
-            setCursorPinch(primaryHand.pinchDistance);
-            setHandConfidence(primaryHand.confidence);
+            lastHandPosRef.current = primaryHand.indexFingertip;
+            lastPinchRef.current = primaryHand.pinchDistance;
+            lastConfidenceRef.current = primaryHand.confidence;
+
+            cursorHandleRef.current?.update(
+              primaryHand.indexFingertip,
+              primaryHand.pinchDistance,
+              primaryHand.confidence,
+              false
+            );
 
             runtime.processHands(normalizedHands);
-            setTrackingState('tracking');
+            setTrackingState((prev) => (prev !== 'tracking' ? 'tracking' : prev));
           } else {
-            setTrackingState('idle');
+            cursorHandleRef.current?.update(null, 0.15, 0, false);
+            setTrackingState((prev) => (prev !== 'idle' ? 'idle' : prev));
           }
         });
 
@@ -306,7 +320,7 @@ export const App: React.FC = () => {
     if (demoActive) {
       demoPlayerRef.current?.stop();
       setDemoActive(false);
-      setCursorPos(null);
+      cursorHandleRef.current?.update(null, 0.15, 0, false);
       if (songBackingActive && engine) {
         engine.backing.stop();
         setSongBackingActive(false);
@@ -383,8 +397,8 @@ export const App: React.FC = () => {
           inferenceFps: stats.inferenceFps,
           inferenceLatencyMs: stats.inferenceLatencyMs,
           droppedFrames: stats.droppedFrames,
-          handConfidence: handConfidence,
-          strikeConfidence: cursorStriking ? 0.95 : 0.1,
+          handConfidence: lastConfidenceRef.current,
+          strikeConfidence: 0.95,
           renderFps: 60,
           audioScheduleJitterMs: audioStats.p50Ms,
           activeVoices: engine.voices.activeCount,
@@ -394,7 +408,7 @@ export const App: React.FC = () => {
       }
     }, 500);
     return () => clearInterval(interval);
-  }, [engine, demoActive, handConfidence, cursorStriking]);
+  }, [engine, demoActive]);
 
   return (
     <div className="relative w-screen h-screen flex flex-col justify-between overflow-hidden bg-[#07090e]">
@@ -416,13 +430,8 @@ export const App: React.FC = () => {
         className="absolute inset-0 pointer-events-none transition-all duration-700"
       />
 
-      {/* Hand Cursor Marker */}
-      <HandCursor
-        fingertip={cursorPos}
-        pinchDistance={cursorPinch}
-        confidence={handConfidence}
-        isStriking={cursorStriking}
-      />
+      {/* Hand Cursor Marker (imperatively updated for 60fps smoothness) */}
+      <HandCursor ref={cursorHandleRef} />
 
       {/* Top Header Bar with Kanye Kit Selector */}
       <Header
