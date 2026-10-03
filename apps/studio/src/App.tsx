@@ -476,6 +476,13 @@ export const App: React.FC = () => {
           padStates={padStates}
           onPointerTrigger={handlePointerTrigger}
           onPointerRelease={handlePointerRelease}
+          bpm={bpm}
+          kitName={currentKit.name}
+          album={currentKit.album}
+          songBackingActive={songBackingActive}
+          onToggleSongBacking={toggleSongBacking}
+          transportState={transportState}
+          onToggleTransport={toggleTransport}
         />
       </main>
 

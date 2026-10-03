@@ -55,3 +55,102 @@ body {
   perspective: 1000px;
   transform-style: preserve-3d;
 }
+
+/* ===========================================================================
+   Akai MPC 2000XL Hardware Styles (Kanye West Edition)
+   =========================================================================== */
+.mpc-chassis {
+  background: linear-gradient(175deg, #ded8c9 0%, #d4cdbb 40%, #c4bcaa 100%);
+  box-shadow: 
+    0 25px 60px -10px rgba(0, 0, 0, 0.9),
+    0 0 0 1px rgba(255, 255, 255, 0.6) inset,
+    0 -3px 8px rgba(0, 0, 0, 0.25) inset;
+}
+
+.mpc-screw {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #cbd5e1, #475569);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.7), 0 1px 2px rgba(0, 0, 0, 0.6);
+  position: relative;
+}
+.mpc-screw::after {
+  content: '';
+  position: absolute;
+  top: 3.5px;
+  left: 1.5px;
+  width: 6px;
+  height: 1.5px;
+  background: #1e293b;
+  transform: rotate(45deg);
+}
+
+.mpc-lcd-screen {
+  background-color: #0b241c;
+  background-image: 
+    linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.4) 50%),
+    linear-gradient(90deg, rgba(255, 0, 0, 0.04), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.04));
+  background-size: 100% 3px, 6px 100%;
+  box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.95), 0 1px 0 rgba(255, 255, 255, 0.3);
+  color: #34d399;
+  text-shadow: 0 0 6px rgba(52, 211, 153, 0.8);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+
+.mpc-pad-well {
+  background: #18191c;
+  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.8), 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.mpc-rubber-pad {
+  background: linear-gradient(150deg, #383a42 0%, #26272e 60%, #1e1f24 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  border-right: 1px solid rgba(0, 0, 0, 0.6);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.85);
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.7),
+    0 2px 4px -2px rgba(0, 0, 0, 0.6),
+    inset 0 1px 1px rgba(255, 255, 255, 0.12),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.6);
+  transition: transform 0.06s cubic-bezier(0.1, 0.9, 0.2, 1), box-shadow 0.06s ease, background 0.06s ease;
+}
+
+.mpc-rubber-pad-hover {
+  background: linear-gradient(150deg, #444752 0%, #2c2e36 60%, #22242a 100%);
+  box-shadow: 
+    0 4px 10px rgba(0, 0, 0, 0.6),
+    0 0 14px rgba(245, 158, 11, 0.4),
+    inset 0 1px 2px rgba(255, 255, 255, 0.25),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.6);
+}
+
+.mpc-rubber-pad-strike {
+  transform: translateY(3.5px) scale(0.97) !important;
+  background: linear-gradient(150deg, #202126 0%, #141518 100%) !important;
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.9),
+    0 0 30px rgba(239, 68, 68, 0.9),
+    inset 0 0 18px rgba(245, 158, 11, 0.7) !important;
+}
+
+.mpc-jog-wheel {
+  background: radial-gradient(circle at 40% 40%, #e2e8f0 0%, #94a3b8 55%, #475569 100%);
+  box-shadow: 
+    0 5px 10px rgba(0, 0, 0, 0.4),
+    inset 0 2px 3px rgba(255, 255, 255, 0.85),
+    inset 0 -3px 4px rgba(0, 0, 0, 0.5);
+}
+
+.mpc-btn {
+  background: linear-gradient(180deg, #f8fafc 0%, #cbd5e1 100%);
+  border: 1px solid #94a3b8;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+.mpc-btn:active {
+  transform: translateY(1px);
+  background: linear-gradient(180deg, #cbd5e1 0%, #94a3b8 100%);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
