@@ -22,12 +22,12 @@ export interface CalibrationProfile {
 
 export const DEFAULT_CALIBRATION_PROFILE: CalibrationProfile = {
   dominantHand: 'Right',
-  hoverDepthZ: -0.015,
-  strikeDepthThresholdZ: -0.045,
-  minStrikeVelocityZ: 0.28,
+  hoverDepthZ: -0.012,
+  strikeDepthThresholdZ: -0.030,
+  minStrikeVelocityZ: 0.12,
   maxLateralVelocityXY: 1.2,
-  pinchThreshold: 0.055,
-  cooldownMs: 80,
-  hysteresisDepthZ: 0.018,
+  pinchThreshold: 0.080,
+  cooldownMs: 70,
+  hysteresisDepthZ: 0.012,
   sensitivity: 1.0
 };

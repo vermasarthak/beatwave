@@ -5,7 +5,8 @@ import {
   PadStateChangeEvent,
   ContinuousGestureEvent,
   CalibrationProfile,
-  DEFAULT_CALIBRATION_PROFILE
+  DEFAULT_CALIBRATION_PROFILE,
+  Rect2D
 } from '@beatwave/protocol';
 import { KinematicTracker, KinematicFeatures } from './kinematics.js';
 import { PadFSM, PadFSMOutput } from './state-machine.js';
@@ -54,6 +55,25 @@ export class GestureRuntime {
     this.calibration = calibration;
     for (const fsm of this.padFSMs.values()) {
       fsm.updateCalibration(calibration);
+    }
+  }
+
+  public updatePadBounds(padIndex: number, bounds: Rect2D): void {
+    const fsm = this.padFSMs.get(padIndex);
+    if (fsm) {
+      fsm.updateBounds(bounds);
+    }
+  }
+
+  public updateAllPadBounds(boundsMap: Map<number, Rect2D> | Record<number, Rect2D>): void {
+    if (boundsMap instanceof Map) {
+      for (const [padIndex, bounds] of boundsMap.entries()) {
+        this.updatePadBounds(padIndex, bounds);
+      }
+    } else {
+      for (const [key, bounds] of Object.entries(boundsMap)) {
+        this.updatePadBounds(Number(key), bounds);
+      }
     }
   }
 

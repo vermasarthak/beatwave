@@ -10,6 +10,10 @@ export interface KinematicFeatures {
   readonly velocity: Point3D;
   /** Lateral planar velocity: sqrt(vx^2 + vy^2) */
   readonly lateralSpeedXY: number;
+  /** Horizontal lateral velocity: abs(vx) */
+  readonly lateralSpeedX: number;
+  /** Downward air-drum strike speed: vy (positive when flicking downward onto pad) */
+  readonly downwardSpeedY: number;
   /** Forward strike speed: -vz (positive when striking forward into the screen) */
   readonly strikeSpeedZ: number;
   /** Acceleration in Z */
@@ -37,6 +41,8 @@ export class KinematicTracker {
         position: hand.indexFingertip,
         velocity: { x: 0, y: 0, z: 0 },
         lateralSpeedXY: 0,
+        lateralSpeedX: 0,
+        downwardSpeedY: 0,
         strikeSpeedZ: 0,
         accelerationZ: 0,
         pinchDistance: hand.pinchDistance,
@@ -52,6 +58,8 @@ export class KinematicTracker {
     const vz = (hand.indexFingertip.z - this.previousHand.indexFingertip.z) / dtSec;
 
     const lateralSpeedXY = Math.hypot(vx, vy);
+    const lateralSpeedX = Math.abs(vx);
+    const downwardSpeedY = vy;
     // In camera space, forward toward the camera / screen contact plane is negative Z
     const strikeSpeedZ = -vz;
 
@@ -70,6 +78,8 @@ export class KinematicTracker {
       position: hand.indexFingertip,
       velocity: { x: vx, y: vy, z: vz },
       lateralSpeedXY,
+      lateralSpeedX,
+      downwardSpeedY,
       strikeSpeedZ,
       accelerationZ,
       pinchDistance: hand.pinchDistance,

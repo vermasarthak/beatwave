@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { PadBank, PadLifecycleState } from '@beatwave/protocol';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { PadBank, PadLifecycleState, Rect2D } from '@beatwave/protocol';
 import { MpcPad } from './MpcPad.js';
 
 interface FloatingPadGridProps {
@@ -7,6 +7,7 @@ interface FloatingPadGridProps {
   padStates: Map<number, { state: PadLifecycleState; compression: number; hoverProximity: number }>;
   onPointerTrigger: (padIndex: number) => void;
   onPointerRelease: (padIndex: number) => void;
+  onPadBoundsMeasured?: (boundsMap: Map<number, Rect2D>) => void;
   bpm?: number;
   kitName?: string;
   album?: string;
@@ -28,6 +29,7 @@ export const FloatingPadGrid: React.FC<FloatingPadGridProps> = ({
   padStates,
   onPointerTrigger,
   onPointerRelease,
+  onPadBoundsMeasured,
   bpm = 85,
   kitName = 'Runaway',
   album = 'MBDTF',
@@ -38,6 +40,44 @@ export const FloatingPadGrid: React.FC<FloatingPadGridProps> = ({
 }) => {
   const [lastHit, setLastHit] = useState<{ padIndex: number; label: string; time: number } | null>(null);
   const [activeBankTab, setActiveBankTab] = useState<'A' | 'B' | 'C' | 'D'>('A');
+  const gridRef = useRef<HTMLDivElement | null>(null);
+
+  // Automatically measure exact screen coordinates of all 16 pads and sync with GestureRuntime
+  const measureBounds = useCallback(() => {
+    if (!gridRef.current || !onPadBoundsMeasured) return;
+    const padEls = gridRef.current.querySelectorAll<HTMLElement>('[data-pad-index]');
+    const boundsMap = new Map<number, Rect2D>();
+    const winW = window.innerWidth;
+    const winH = window.innerHeight;
+    if (winW <= 0 || winH <= 0) return;
+
+    padEls.forEach((el) => {
+      const idxAttr = el.getAttribute('data-pad-index');
+      if (idxAttr === null) return;
+      const padIdx = Number(idxAttr);
+      const rect = el.getBoundingClientRect();
+      boundsMap.set(padIdx, {
+        minX: Math.max(0, rect.left / winW),
+        maxX: Math.min(1, rect.right / winW),
+        minY: Math.max(0, rect.top / winH),
+        maxY: Math.min(1, rect.bottom / winH)
+      });
+    });
+
+    if (boundsMap.size > 0) {
+      onPadBoundsMeasured(boundsMap);
+    }
+  }, [onPadBoundsMeasured]);
+
+  useEffect(() => {
+    measureBounds();
+    window.addEventListener('resize', measureBounds);
+    const t = setTimeout(measureBounds, 150);
+    return () => {
+      window.removeEventListener('resize', measureBounds);
+      clearTimeout(t);
+    };
+  }, [measureBounds, bank]);
 
   // Detect newly struck pad to update LCD screen in realtime
   useEffect(() => {
@@ -170,7 +210,7 @@ export const FloatingPadGrid: React.FC<FloatingPadGridProps> = ({
 
         {/* 3. 4x4 AUTHENTIC MPC RUBBER PAD GRID */}
         <div className="w-full rounded-2xl p-3 sm:p-4 mpc-pad-well border border-black/80">
-          <div className="grid grid-cols-4 grid-rows-4 gap-2.5 sm:gap-3.5 w-full aspect-square">
+          <div ref={gridRef} className="grid grid-cols-4 grid-rows-4 gap-2.5 sm:gap-3.5 w-full aspect-square">
             {bank.pads.map((pad, idx) => {
               const st = padStates.get(pad.padIndex) || {
                 state: 'OUTSIDE',

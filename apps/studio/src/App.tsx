@@ -7,6 +7,7 @@ import {
   CalibrationProfile,
   DEFAULT_CALIBRATION_PROFILE,
   Point3D,
+  Rect2D,
   TelemetryMetrics
 } from '@beatwave/protocol';
 import {
@@ -32,32 +33,43 @@ import { CalibrationModal } from './components/CalibrationModal.js';
 import { AutoKitModal } from './components/AutoKitModal.js';
 import { SyntheticDemoPlayer } from './demo/SyntheticDemoPlayer.js';
 
-function createBankFromKit(kitId: string, bankId: 'A' | 'B' | 'C' | 'D' = 'A'): PadBank {
+function createBankFromKit(
+  kitId: string,
+  bankId: 'A' | 'B' | 'C' | 'D' = 'A',
+  customBounds?: Map<number, Rect2D>
+): PadBank {
   const kit = ALL_KITS.find((k) => k.id === kitId) || FLASHING_LIGHTS_KIT;
   return {
     id: bankId,
     name: `${kit.name} (${bankId})`,
     pads: Array.from({ length: 16 }, (_, i) => {
       const sample = kit.samples[i] || kit.samples[0];
+      const padCol = i % 4;
+      const padRow = Math.floor(i / 4);
+      // Realistic centered MPC pad grid: x in [0.28, 0.72], y in [0.32, 0.76]
+      const defaultBounds: Rect2D = {
+        minX: 0.28 + padCol * 0.11,
+        maxX: 0.28 + padCol * 0.11 + 0.09,
+        minY: 0.32 + padRow * 0.11,
+        maxY: 0.32 + padRow * 0.11 + 0.09
+      };
+      const bounds = customBounds?.get(i) || defaultBounds;
+      const chokeGroup = sample.chokeGroup ?? (sample.category === 'vocal' ? 1 : undefined);
+
       return {
         id: `pad_${bankId}_${i}`,
         padIndex: i,
         label: sample.note || sample.name,
         color: sample.color || kit.themeColor,
-        bounds: {
-          minX: (i % 4) * 0.22 + 0.06,
-          maxX: (i % 4) * 0.22 + 0.24,
-          minY: Math.floor(i / 4) * 0.22 + 0.06,
-          maxY: Math.floor(i / 4) * 0.22 + 0.24
-        },
+        bounds,
         action: {
           type: 'SampleTrigger',
           sampleId: sample.id,
           gain: sample.defaultGain,
           pan: 0,
-          chokeGroup: sample.chokeGroup
+          chokeGroup
         },
-        chokeGroup: sample.chokeGroup
+        chokeGroup
       };
     })
   };
@@ -92,6 +104,7 @@ export const App: React.FC = () => {
 
   // Pad visual states
   const [padStates, setPadStates] = useState<Map<number, { state: PadLifecycleState; compression: number; hoverProximity: number }>>(new Map());
+  const measuredBoundsRef = useRef<Map<number, Rect2D>>(new Map());
 
   // High-performance imperative cursor tracking (bypasses 60fps React re-renders)
   const cursorHandleRef = useRef<HandCursorHandle | null>(null);
@@ -149,6 +162,14 @@ export const App: React.FC = () => {
       },
       onPadStateChange: (change) => {
         setPadStates((prev) => {
+          const current = prev.get(change.padIndex);
+          if (
+            current &&
+            current.state === change.newState &&
+            Math.abs(current.compression - change.compression) < 0.05
+          ) {
+            return prev;
+          }
           const next = new Map(prev);
           next.set(change.padIndex, {
             state: change.newState,
@@ -177,15 +198,24 @@ export const App: React.FC = () => {
     };
   }, []);
 
+  // Synchronize on-screen measured pad hitboxes with GestureRuntime
+  const handlePadBoundsMeasured = useCallback((boundsMap: Map<number, Rect2D>) => {
+    measuredBoundsRef.current = boundsMap;
+    runtime?.updateAllPadBounds(boundsMap);
+  }, [runtime]);
+
   // Handle Kanye Kit change
   const handleKitChange = async (kitId: string) => {
     setActiveKitId(kitId);
     const kit = ALL_KITS.find((k) => k.id === kitId) || FLASHING_LIGHTS_KIT;
-    const newBank = createBankFromKit(kitId, activeBank.id);
+    const newBank = createBankFromKit(kitId, activeBank.id, measuredBoundsRef.current);
     setActiveBank(newBank);
 
     if (runtime) {
       runtime.setPadBank(newBank);
+      if (measuredBoundsRef.current.size > 0) {
+        runtime.updateAllPadBounds(measuredBoundsRef.current);
+      }
     }
     if (engine) {
       await engine.registry.preloadKit(kitId);
@@ -485,6 +515,7 @@ export const App: React.FC = () => {
           padStates={padStates}
           onPointerTrigger={handlePointerTrigger}
           onPointerRelease={handlePointerRelease}
+          onPadBoundsMeasured={handlePadBoundsMeasured}
           bpm={bpm}
           kitName={currentKit.name}
           album={currentKit.album}
@@ -500,9 +531,14 @@ export const App: React.FC = () => {
         mixer={engine?.mixer || null}
         activeBankId={activeBank.id}
         onSelectBank={(b) => {
-          const newBank = createBankFromKit(activeKitId, b);
+          const newBank = createBankFromKit(activeKitId, b, measuredBoundsRef.current);
           setActiveBank(newBank);
-          runtime?.setPadBank(newBank);
+          if (runtime) {
+            runtime.setPadBank(newBank);
+            if (measuredBoundsRef.current.size > 0) {
+              runtime.updateAllPadBounds(measuredBoundsRef.current);
+            }
+          }
         }}
       />
 

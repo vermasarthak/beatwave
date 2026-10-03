@@ -11,7 +11,7 @@ interface MpcPadProps {
   shortcutKey: string;
 }
 
-export const MpcPad: React.FC<MpcPadProps> = ({
+export const MpcPadComponent: React.FC<MpcPadProps> = ({
   pad,
   state,
   compression,
@@ -33,9 +33,17 @@ export const MpcPad: React.FC<MpcPadProps> = ({
 
   return (
     <div
-      onPointerDown={() => onPointerDown(pad.padIndex)}
-      onPointerUp={() => onPointerUp(pad.padIndex)}
+      data-pad-index={pad.padIndex}
+      onPointerDown={(e) => {
+        e.preventDefault();
+        onPointerDown(pad.padIndex);
+      }}
+      onPointerUp={(e) => {
+        e.preventDefault();
+        onPointerUp(pad.padIndex);
+      }}
       style={{
+        touchAction: 'manipulation',
         transform: `translateY(${yTranslate}px) scale(${scale})`,
         boxShadow: isStruck
           ? `0 0 25px ${padColor}, inset 0 0 16px ${padColor}88, 0 1px 3px rgba(0,0,0,0.9)`
@@ -102,3 +110,14 @@ export const MpcPad: React.FC<MpcPadProps> = ({
     </div>
   );
 };
+
+export const MpcPad = React.memo(MpcPadComponent, (prev, next) => {
+  return (
+    prev.state === next.state &&
+    prev.compression === next.compression &&
+    prev.hoverProximity === next.hoverProximity &&
+    prev.pad.id === next.pad.id &&
+    prev.pad.label === next.pad.label &&
+    prev.shortcutKey === next.shortcutKey
+  );
+});

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { PadFSM } from './state-machine.js';
 import { KinematicFeatures } from './kinematics.js';
+import { GestureRuntime } from './gesture-runtime.js';
 import { DEFAULT_CALIBRATION_PROFILE, PadConfig } from '@beatwave/protocol';
 
 function makePadConfig(index: number = 0): PadConfig {
@@ -35,6 +36,8 @@ function makeFeatures(
     position: { x, y, z },
     velocity: { x: lateralSpeedXY, y: 0, z: -strikeSpeedZ },
     lateralSpeedXY,
+    lateralSpeedX: lateralSpeedXY,
+    downwardSpeedY: 0,
     strikeSpeedZ,
     accelerationZ: 0,
     pinchDistance: pinchDist,
@@ -104,7 +107,7 @@ describe('PadFSM State Machine', () => {
     // Hover
     fsm.update(makeFeatures(0.3, 0.3, 0.0, 0, 0, 33, 0.15), 0.9);
 
-    // Rapid pinch closing below threshold (0.055)
+    // Rapid pinch closing below threshold
     const feat = {
       ...makeFeatures(0.3, 0.3, 0.0, 0, 0, 66, 0.03),
       pinchRate: 0.5
@@ -112,5 +115,61 @@ describe('PadFSM State Machine', () => {
     const out = fsm.update(feat, 0.9);
     expect(out.triggered).toBe(true);
     expect(out.method).toBe('PINCH_TAP');
+  });
+
+  it('triggers on downward air-drum tap (Y-axis strike)', () => {
+    const pad = makePadConfig(0);
+    const fsm = new PadFSM(pad, DEFAULT_CALIBRATION_PROFILE);
+
+    // Hover
+    fsm.update(makeFeatures(0.3, 0.3, 0.0, 0, 0, 33), 0.9);
+
+    // Downward flick with low lateral speed
+    const feat: KinematicFeatures = {
+      ...makeFeatures(0.3, 0.35, 0.0, 0, 0.1, 66),
+      downwardSpeedY: 0.38,
+      lateralSpeedX: 0.05
+    };
+    const out = fsm.update(feat, 0.9);
+    expect(out.triggered).toBe(true);
+    expect(out.currentState).toBe('STRIKE');
+  });
+
+  it('dynamically updates pad bounds and respects new hitboxes', () => {
+    const pad = makePadConfig(0);
+    const bank = { id: 'A' as const, name: 'Test Bank', pads: [pad] };
+    let strikeDetected = false;
+    const runtime = new GestureRuntime(bank, {
+      onStrike: () => {
+        strikeDetected = true;
+      }
+    });
+
+    // Old bounds: 0.2 to 0.4. Test point at 0.7 (outside)
+    const handOutside = {
+      id: 1,
+      confidence: 0.9,
+      handedness: 'Right' as const,
+      indexFingertip: { x: 0.7, y: 0.7, z: -0.05 },
+      pinchDistance: 0.15,
+      palmCenter: { x: 0.7, y: 0.7, z: 0 },
+      palmScale: 0.2,
+      landmarks: [],
+      timestampMs: 33
+    };
+    runtime.processHands([handOutside]);
+    expect(strikeDetected).toBe(false);
+
+    // Update bounds to include (0.7, 0.7)
+    runtime.updatePadBounds(0, { minX: 0.6, maxX: 0.8, minY: 0.6, maxY: 0.8 });
+
+    // Now send downward strike inside new bounds
+    const handInside = {
+      ...handOutside,
+      timestampMs: 66,
+      indexFingertip: { x: 0.7, y: 0.75, z: -0.05 }
+    };
+    const res = runtime.processHands([handInside]);
+    expect(res.padStates[0].state).not.toBe('OUTSIDE');
   });
 });
